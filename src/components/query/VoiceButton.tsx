@@ -35,10 +35,10 @@ export function VoiceButton({ onTranscript, language, className }: VoiceButtonPr
           <Button
             variant="outline"
             size="icon"
-            className={cn('h-12 w-12 rounded-full opacity-50 cursor-not-allowed', className)}
+            className={cn('h-8 w-8 rounded-full opacity-50 cursor-not-allowed', className)}
             disabled
           >
-            <MicOff className="h-5 w-5" />
+            <MicOff className="h-3.5 w-3.5" />
           </Button>
         </TooltipTrigger>
         <TooltipContent>
@@ -56,7 +56,7 @@ export function VoiceButton({ onTranscript, language, className }: VoiceButtonPr
             variant={isListening ? 'destructive' : 'outline'}
             size="icon"
             className={cn(
-              'h-12 w-12 rounded-full transition-all duration-200',
+              'h-8 w-8 rounded-full transition-all duration-200',
               isListening && 'animate-pulse shadow-lg shadow-destructive/30',
               className
             )}
@@ -73,7 +73,7 @@ export function VoiceButton({ onTranscript, language, className }: VoiceButtonPr
                 ))}
               </div>
             ) : (
-              <Mic className="h-5 w-5" />
+              <Mic className="h-3.5 w-3.5" />
             )}
           </Button>
         </TooltipTrigger>

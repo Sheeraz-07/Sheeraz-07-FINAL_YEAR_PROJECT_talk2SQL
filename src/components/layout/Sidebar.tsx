@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
@@ -60,15 +61,23 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       <Link
         href={path}
         className={cn(
-          'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
-          'hover:bg-accent hover:text-accent-foreground',
-          isActive && 'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-md',
-          isCollapsed && 'justify-center'
+          'group flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300',
+          'hover:bg-sidebar-accent hover:shadow-md hover:-translate-x-1',
+          isActive 
+            ? 'bg-accent text-accent-foreground font-bold shadow-lg hover:shadow-xl' 
+            : 'text-sidebar-foreground/70 hover:text-sidebar-foreground font-medium',
+          isCollapsed && 'justify-center px-2'
         )}
       >
-        <Icon className={cn('h-5 w-5 flex-shrink-0', isActive && 'drop-shadow-sm')} />
+        <Icon className={cn(
+          'h-6 w-6 flex-shrink-0 transition-all duration-300',
+          isActive ? 'scale-110 drop-shadow-md' : 'group-hover:scale-110 group-hover:rotate-3'
+        )} />
         {!isCollapsed && (
-          <span className="font-medium truncate">{label}</span>
+          <span className="text-sm truncate font-medium">{label}</span>
+        )}
+        {!isCollapsed && isActive && (
+          <div className="ml-auto h-2 w-2 rounded-full bg-accent-foreground animate-pulse" />
         )}
       </Link>
     );
@@ -90,26 +99,39 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen bg-card border-r border-border transition-all duration-300',
+        'fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300',
         isCollapsed ? 'w-[72px]' : 'w-64'
       )}
     >
       <div className="flex flex-col h-full">
-        {/* Logo */}
+        {/* Logo & Brand */}
         <div className={cn(
-          'flex items-center h-16 px-4 border-b border-border',
+          'flex items-center h-16 px-4 border-b border-sidebar-border',
           isCollapsed ? 'justify-center' : 'gap-3'
         )}>
-          <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shadow-md">
-            <MessageSquare className="h-4 w-4 text-primary-foreground" />
+          <div className="relative group">
+            <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 hover:rotate-6">
+              <Sparkles className="h-6 w-6 text-accent-foreground animate-pulse" />
+            </div>
+            <div className="absolute inset-0 rounded-xl bg-accent/50 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
           </div>
           {!isCollapsed && (
-            <span className="font-bold text-lg text-gradient">Talk2SQL</span>
+            <div className="flex flex-col animate-slide-right">
+              <span className="font-extrabold text-lg tracking-tight">Talk2SQL</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">AI Platform</span>
+            </div>
           )}
         </div>
 
         {/* Main Navigation */}
-        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+          {!isCollapsed && (
+            <div className="px-3 pb-2">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Main Menu
+              </span>
+            </div>
+          )}
           {mainNavItems.map((item) => (
             <NavItem key={item.path} {...item} />
           ))}
@@ -118,13 +140,15 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           {user?.role === 'admin' && (
             <>
               <div className={cn(
-                'pt-4 pb-2',
-                isCollapsed ? 'border-t border-border mt-4' : ''
+                'pt-6 pb-2',
+                isCollapsed ? 'border-t border-sidebar-border mt-4' : ''
               )}>
                 {!isCollapsed && (
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">
-                    Admin
-                  </span>
+                  <div className="px-3">
+                    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Administration
+                    </span>
+                  </div>
                 )}
               </div>
               {adminNavItems.map((item) => (
@@ -132,56 +156,81 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               ))}
             </>
           )}
+
+          {/* Bottom Section */}
+          <div className={cn(
+            'pt-6',
+            isCollapsed ? 'border-t border-sidebar-border mt-4' : ''
+          )}>
+            {!isCollapsed && (
+              <div className="px-3 pb-2">
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Support
+                </span>
+              </div>
+            )}
+            {bottomNavItems.map((item) => (
+              <NavItem key={item.path} {...item} />
+            ))}
+          </div>
         </nav>
 
-        {/* Bottom Section */}
-        <div className="p-3 space-y-1 border-t border-border">
-          {bottomNavItems.map((item) => (
-            <NavItem key={item.path} {...item} />
-          ))}
-
-          {/* User Profile */}
+        {/* User Profile */}
+        <div className="p-3 border-t border-sidebar-border">
           <div className={cn(
-            'flex items-center gap-3 p-2 rounded-lg bg-secondary/50 mt-3',
+            'flex items-center gap-3 p-3 rounded-xl bg-sidebar-accent/50 hover:bg-sidebar-accent transition-all duration-300 hover:shadow-lg hover:scale-[1.02] group',
             isCollapsed && 'justify-center'
           )}>
-            <Avatar className="h-8 w-8">
+            <Avatar className="h-10 w-10 ring-2 ring-sidebar-border hover:ring-accent transition-all duration-300 group-hover:scale-110">
               <AvatarImage src={user?.avatar} />
-              <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+              <AvatarFallback className="bg-accent text-accent-foreground text-sm font-bold">
                 {user?.name?.charAt(0) || 'U'}
               </AvatarFallback>
             </Avatar>
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{user?.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                <p className="text-sm font-bold truncate">{user?.name || 'User'}</p>
+                <p className="text-xs text-muted-foreground truncate font-medium">{user?.email || 'user@example.com'}</p>
               </div>
             )}
             {!isCollapsed && (
-              <Button variant="ghost" size="icon" onClick={logout} className="h-8 w-8">
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={logout} 
+                    className="h-9 w-9 hover:bg-destructive/10 hover:text-destructive hover:rotate-12 transition-all duration-300"
+                  >
+                    <LogOut className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="font-semibold">Sign out</TooltipContent>
+              </Tooltip>
             )}
           </div>
         </div>
 
         {/* Collapse Toggle */}
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
           onClick={onToggle}
           className={cn(
-            'absolute -right-3 top-20 h-6 w-6 rounded-full border border-border bg-card shadow-md',
-            'hover:bg-accent'
+            'absolute -right-3 top-20 h-8 w-8 rounded-full border-2 border-sidebar-border bg-sidebar shadow-xl',
+            'hover:bg-sidebar-accent hover:scale-125 hover:rotate-180 transition-all duration-500',
+            'hover:border-accent hover:shadow-accent/30',
+            'hidden lg:flex items-center justify-center'
           )}
         >
           {isCollapsed ? (
-            <ChevronRight className="h-3 w-3" />
+            <ChevronRight className="h-5 w-5" />
           ) : (
-            <ChevronLeft className="h-3 w-3" />
+            <ChevronLeft className="h-5 w-5" />
           )}
         </Button>
       </div>
     </aside>
   );
 }
+

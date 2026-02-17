@@ -85,11 +85,11 @@ export function QueryInterface() {
       {/* Query Input Card */}
       <Card
         className={cn(
-          'p-6 transition-all duration-300',
+          'p-3 transition-all duration-300',
           isFocused && 'ring-2 ring-primary shadow-lg shadow-primary/10'
         )}
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-2">
           {/* Main Input Area */}
           <div className="relative">
             <Textarea
@@ -103,16 +103,16 @@ export function QueryInterface() {
                   ? "Ask about employees, attendance, inventory, production, or sales..."
                   : "Employees, attendance, inventory, production, ya sales k baray me pochain..."
               }
-              className="min-h-[120px] text-lg resize-none pr-16 focus-visible:ring-0 border-0 shadow-none bg-secondary/30 rounded-xl"
+              className="min-h-[50px] text-sm resize-none pr-14 focus-visible:ring-0 border-0 shadow-none bg-secondary/30 rounded-xl py-2"
               disabled={isLoading}
             />
-            <div className="absolute right-3 bottom-3">
+            <div className="absolute right-2 top-1/2 -translate-y-1/2">
               <VoiceButton onTranscript={handleVoiceTranscript} language={language} />
             </div>
           </div>
 
           {/* Controls Row */}
-          <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <LanguageToggle current={language} onChange={setLanguage} />
 
             <div className="flex items-center gap-2">

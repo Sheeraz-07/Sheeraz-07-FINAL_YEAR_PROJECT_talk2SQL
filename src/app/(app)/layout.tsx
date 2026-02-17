@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
+import { Sidebar } from '@/components/layout/Sidebar';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 
 const pageTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -27,7 +27,6 @@ export default function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -53,33 +52,29 @@ export default function AppLayout({
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
-        <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      </div>
-
-      {/* Mobile Sidebar */}
+      {/* Mobile Sidebar (for small screens) */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetContent side="left" className="p-0 w-64">
+        <SheetContent side="left" className="p-0 w-64 border-r-0">
+          <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
           <Sidebar isCollapsed={false} onToggle={() => setMobileMenuOpen(false)} />
         </SheetContent>
       </Sheet>
 
-      {/* Main Content */}
-      <main
-        className={cn(
-          'min-h-screen transition-all duration-300',
-          sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-64'
-        )}
-      >
+      {/* Main Content - Full Width */}
+      <div className="min-h-screen">
         <Header
           title={pageTitle}
           onMobileMenuClick={() => setMobileMenuOpen(true)}
         />
-        <div className="p-4 lg:p-6">
-          {children}
-        </div>
-      </main>
+        <main className="w-full">
+          <div className="container mx-auto px-4 md:px-6 lg:px-8 py-6 max-w-[1920px]">
+            <div className="animate-fade-in">
+              {children}
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
+

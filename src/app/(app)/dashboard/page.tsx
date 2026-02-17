@@ -5,13 +5,16 @@ import {
   Users,
   Package,
   AlertTriangle,
+  ArrowUpRight,
+  Calendar,
 } from 'lucide-react';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { QuickQuery } from '@/components/dashboard/QuickQuery';
 import { RecentQueryList } from '@/components/dashboard/RecentQueryList';
 import { InsightsPanel } from '@/components/dashboard/InsightsPanel';
 import { ShortcutsGrid } from '@/components/dashboard/ShortcutsGrid';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const mockStats = {
@@ -68,10 +71,32 @@ const salesChartData = [
 ];
 
 export default function DashboardPage() {
+  const currentDate = new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
+          <p className="text-muted-foreground mt-1 flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            {currentDate}
+          </p>
+        </div>
+        <Button className="rounded-xl shadow-md hover:shadow-lg transition-all">
+          <ArrowUpRight className="h-4 w-4 mr-2" />
+          View Reports
+        </Button>
+      </div>
+
       {/* Stats Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <MetricCard
           title="Today's Sales"
           value={`PKR ${(mockStats.todaySales / 1000).toFixed(0)}K`}
@@ -108,28 +133,45 @@ export default function DashboardPage() {
       {/* Charts and Recent Queries Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Sales by Category Chart */}
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4">Weekly Sales by Category (PKR)</h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={salesChartData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="name" className="text-xs" />
-                <YAxis className="text-xs" tickFormatter={(value) => `${value / 1000}K`} />
-                <Tooltip
-                  formatter={(value: number) => `PKR ${value.toLocaleString()}`}
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                  }}
-                />
-                <Bar dataKey="mens" name="Men's" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="womens" name="Women's" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="kids" name="Kids" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+        <Card className="border-border/50 shadow-md hover:shadow-lg transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-lg font-semibold">Weekly Sales by Category</CardTitle>
+            <Button variant="ghost" size="sm" className="text-xs rounded-lg">
+              View Details
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={salesChartData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+                  <XAxis 
+                    dataKey="name" 
+                    className="text-xs"
+                    stroke="hsl(var(--muted-foreground))"
+                  />
+                  <YAxis 
+                    className="text-xs" 
+                    tickFormatter={(value) => `${value / 1000}K`}
+                    stroke="hsl(var(--muted-foreground))"
+                  />
+                  <Tooltip
+                    formatter={(value: number) => `PKR ${value.toLocaleString()}`}
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '12px',
+                      padding: '12px',
+                    }}
+                    labelStyle={{ fontWeight: 600, marginBottom: '8px' }}
+                  />
+                  <Bar dataKey="mens" name="Men's" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="womens" name="Women's" fill="hsl(var(--success))" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="kids" name="Kids" fill="hsl(var(--warning))" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
         </Card>
 
         {/* Recent Queries */}
@@ -141,3 +183,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

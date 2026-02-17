@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { MessageSquare, Mail, Lock, User, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Sparkles, Mail, Lock, User, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -57,137 +57,202 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
+    <div className="min-h-screen flex">
+      {/* Left Section - Branding */}
+      <div className="hidden lg:flex flex-1 bg-gradient-dark items-center justify-center p-12 relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 left-20 w-72 h-72 bg-accent rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-20 w-96 h-96 bg-accent rounded-full blur-3xl" />
+        </div>
+
+        <div className="relative z-10 max-w-lg text-white space-y-8">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium">
+              <ShieldCheck className="h-4 w-4" />
+              Secure & Reliable Platform
+            </div>
+            <h2 className="text-4xl font-bold leading-tight">
+              Join the future of database querying
+            </h2>
+            <p className="text-lg text-white/80">
+              Create your account and start making SQL queries using natural language. Simple, fast, and powerful.
+            </p>
+          </div>
+
+          <div className="space-y-4 pt-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+                ✓
+              </div>
+              <div>
+                <div className="font-semibold">Natural Language Processing</div>
+                <div className="text-sm text-white/70">Convert plain English to SQL instantly</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+                ✓
+              </div>
+              <div>
+                <div className="font-semibold">Enterprise Security</div>
+                <div className="text-sm text-white/70">Bank-level encryption for your data</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+                ✓
+              </div>
+              <div>
+                <div className="font-semibold">Real-time Results</div>
+                <div className="text-sm text-white/70">Get insights in milliseconds</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <Card className="w-full max-w-md relative animate-fade-in">
-        <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-primary/30">
-            <MessageSquare className="h-8 w-8 text-primary-foreground" />
-          </div>
-          <div>
-            <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
-            <CardDescription className="mt-2">
-              Get started with Talk2SQL for natural database queries
-            </CardDescription>
-          </div>
-        </CardHeader>
-
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="John Doe"
-                  className="pl-10"
-                  {...register('name')}
-                />
+      {/* Right Section - Register Form */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-background">
+        <Card className="w-full max-w-md border-border/50 shadow-xl animate-fade-in">
+          <CardHeader className="space-y-4 pb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center">
+                <Sparkles className="h-6 w-6 text-accent-foreground" />
               </div>
-              {errors.name && (
-                <p className="text-sm text-destructive">{errors.name.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@company.com"
-                  className="pl-10"
-                  {...register('email')}
-                />
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight">Talk2SQL</h1>
+                <p className="text-xs text-muted-foreground">AI-Powered Database Queries</p>
               </div>
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
-              )}
             </div>
+            <div className="space-y-1">
+              <CardTitle className="text-2xl">Create an account</CardTitle>
+              <CardDescription>
+                Get started with Talk2SQL for natural database queries
+              </CardDescription>
+            </div>
+          </CardHeader>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  className="pl-10 pr-10"
-                  {...register('password')}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </Button>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-sm font-semibold">Full Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Enter your full name"
+                    className="pl-10 h-11 rounded-xl border-border/50 focus:border-accent"
+                    {...register('name')}
+                  />
+                </div>
+                {errors.name && (
+                  <p className="text-xs text-destructive mt-1">{errors.name.message}</p>
+                )}
               </div>
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password.message}</p>
-              )}
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="confirmPassword"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  className="pl-10"
-                  {...register('confirmPassword')}
-                />
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-semibold">Email address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    className="pl-10 h-11 rounded-xl border-border/50 focus:border-accent"
+                    {...register('email')}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
+                )}
               </div>
-              {errors.confirmPassword && (
-                <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
-              )}
-            </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  Creating account...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  Create account
-                  <ArrowRight className="h-4 w-4" />
-                </span>
-              )}
-            </Button>
-          </form>
-        </CardContent>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-semibold">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Create a strong password"
+                    className="pl-10 pr-10 h-11 rounded-xl border-border/50 focus:border-accent"
+                    {...register('password')}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 rounded-lg hover:bg-muted"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
+                {errors.password && (
+                  <p className="text-xs text-destructive mt-1">{errors.password.message}</p>
+                )}
+              </div>
 
-        <CardFooter className="flex-col space-y-4 text-center text-sm">
-          <p className="text-muted-foreground">
-            Already have an account?{' '}
-            <Link href="/login" className="text-primary font-medium hover:underline">
-              Sign in
-            </Link>
-          </p>
-          <p className="text-xs text-muted-foreground">
-            By creating an account, you agree to our Terms of Service and Privacy Policy
-          </p>
-        </CardFooter>
-      </Card>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-sm font-semibold">Confirm Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="confirmPassword"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Re-enter your password"
+                    className="pl-10 h-11 rounded-xl border-border/50 focus:border-accent"
+                    {...register('confirmPassword')}
+                  />
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-xs text-destructive mt-1">{errors.confirmPassword.message}</p>
+                )}
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-200 mt-6" 
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Creating account...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    Create account
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+
+          <CardFooter className="flex-col space-y-3 pt-6 border-t">
+            <p className="text-sm text-muted-foreground text-center">
+              Already have an account?{' '}
+              <Link href="/login" className="text-accent font-semibold hover:text-accent/80 transition-colors">
+                Sign in
+              </Link>
+            </p>
+            <p className="text-xs text-center text-muted-foreground">
+              By creating an account, you agree to our{' '}
+              <Link href="#" className="underline hover:text-foreground">Terms</Link>
+              {' '}and{' '}
+              <Link href="#" className="underline hover:text-foreground">Privacy Policy</Link>
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 }
+
