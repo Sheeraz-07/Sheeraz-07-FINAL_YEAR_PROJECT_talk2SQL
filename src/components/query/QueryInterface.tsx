@@ -85,11 +85,11 @@ export function QueryInterface() {
       {/* Query Input Card */}
       <Card
         className={cn(
-          'p-3 transition-all duration-300',
-          isFocused && 'ring-2 ring-primary shadow-lg shadow-primary/10'
+          'p-4 transition-all duration-300 border-2',
+          isFocused && 'ring-2 ring-primary shadow-lg shadow-primary/10 border-primary/30'
         )}
       >
-        <form onSubmit={handleSubmit} className="space-y-2">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {/* Main Input Area */}
           <div className="relative">
             <Textarea
@@ -103,7 +103,7 @@ export function QueryInterface() {
                   ? "Ask about employees, attendance, inventory, production, or sales..."
                   : "Employees, attendance, inventory, production, ya sales k baray me pochain..."
               }
-              className="min-h-[50px] text-sm resize-none pr-14 focus-visible:ring-0 border-0 shadow-none bg-secondary/30 rounded-xl py-2"
+              className="min-h-[36px] max-h-[80px] text-base resize-none pr-14 focus-visible:ring-0 border-0 shadow-none bg-gradient-to-br from-secondary/40 to-secondary/20 rounded-xl py-2.5 px-4 placeholder:text-muted-foreground/60"
               disabled={isLoading}
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -112,27 +112,34 @@ export function QueryInterface() {
           </div>
 
           {/* Controls Row */}
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <LanguageToggle current={language} onChange={setLanguage} />
+          <div className="flex items-center justify-between flex-wrap gap-3 pt-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-muted-foreground">Language:</span>
+              <LanguageToggle current={language} onChange={setLanguage} />
+            </div>
 
             <div className="flex items-center gap-2">
               {results && (
-                <Button type="button" variant="outline" onClick={clearResults}>
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Clear
+                <Button type="button" variant="outline" size="sm" onClick={clearResults} className="h-9">
+                  <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                  <span className="text-xs font-medium">Clear</span>
                 </Button>
               )}
-              <Button type="submit" disabled={isLoading || !currentQuery.trim()} size="lg">
+              <Button 
+                type="submit" 
+                disabled={isLoading || !currentQuery.trim()} 
+                className="w-[90px] h-9 font-semibold shadow-md hover:shadow-lg transition-all"
+              >
                 {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    Processing...
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    <span className="text-xs">Wait...</span>
                   </span>
                 ) : (
-                  <span className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4" />
-                    Ask
-                    <Send className="h-4 w-4" />
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span className="text-sm">Ask</span>
+                    <Send className="h-3.5 w-3.5" />
                   </span>
                 )}
               </Button>
@@ -142,18 +149,20 @@ export function QueryInterface() {
 
         {/* Example Queries */}
         {!results && !isLoading && (
-          <div className="mt-4 pt-4 border-t border-border">
-            <p className="text-sm text-muted-foreground mb-3">
-              💡 Try these examples:
-            </p>
+          <div className="mt-3 pt-3 border-t border-border/50">
+            <div className="flex items-center gap-2 mb-2.5">
+              <span className="text-xs font-semibold text-foreground/80 uppercase tracking-wide">💡 Quick Start</span>
+              <div className="h-px flex-1 bg-gradient-to-r from-border/50 to-transparent"></div>
+            </div>
             <div className="flex flex-wrap gap-2">
-              {exampleQueries[language].map((query) => (
+              {exampleQueries[language].map((query, index) => (
                 <Badge
                   key={query}
                   variant="secondary"
-                  className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors py-1.5 px-3"
+                  className="cursor-pointer hover:bg-primary hover:text-primary-foreground hover:scale-105 transition-all duration-200 py-1.5 px-3 text-xs font-medium shadow-sm"
                   onClick={() => handleExampleClick(query)}
                 >
+                  <span className="opacity-60 mr-1.5">{index + 1}.</span>
                   {query}
                 </Badge>
               ))}
