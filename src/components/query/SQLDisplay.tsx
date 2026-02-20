@@ -41,61 +41,63 @@ export function SQLDisplay({ sql, editable = false, onEdit, showExplanation = tr
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className={className}>
-      <div className="bg-card rounded-lg border border-border overflow-hidden">
+      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl border-0 shadow-xl overflow-hidden">
         <CollapsibleTrigger asChild>
-          <div className="flex items-center justify-between p-3 cursor-pointer hover:bg-secondary/50 transition-colors">
-            <div className="flex items-center gap-2">
-              <Code className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Generated SQL</span>
+          <div className="flex items-center justify-between p-5 cursor-pointer hover:bg-gradient-to-r hover:from-indigo-50 hover:to-blue-50 dark:hover:from-indigo-950/30 dark:hover:to-blue-950/30 transition-all duration-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 shadow-md">
+                <Code className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-base font-bold">Generated SQL</span>
             </div>
             <div className="flex items-center gap-2">
               {isOpen ? (
-                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                <ChevronUp className="h-5 w-5 text-muted-foreground" />
               ) : (
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                <ChevronDown className="h-5 w-5 text-muted-foreground" />
               )}
             </div>
           </div>
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <div className="px-3 pb-3 space-y-3">
+          <div className="px-5 pb-5 space-y-4">
             {isEditing ? (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Textarea
                   value={editedSQL}
                   onChange={(e) => setEditedSQL(e.target.value)}
-                  className="font-mono text-sm min-h-[120px] bg-secondary/30"
+                  className="font-mono text-sm min-h-[180px] bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 border-2 rounded-xl shadow-sm"
                 />
-                <div className="flex items-center gap-2">
-                  <Button size="sm" onClick={handleSaveEdit}>
+                <div className="flex items-center gap-3">
+                  <Button size="sm" onClick={handleSaveEdit} className="rounded-full px-5 font-semibold shadow-md hover:shadow-lg bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 border-0 hover:scale-105 transition-all duration-200">
                     Save Changes
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>
+                  <Button size="sm" variant="outline" onClick={() => setIsEditing(false)} className="rounded-full px-5 font-semibold shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200">
                     Cancel
                   </Button>
                 </div>
               </div>
             ) : (
               <div className="relative group">
-                <pre className="p-4 rounded-lg bg-secondary/30 overflow-x-auto">
-                  <code className="text-sm font-mono text-foreground whitespace-pre-wrap">
+                <pre className="p-5 rounded-xl bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 overflow-x-auto border-2 border-slate-200 dark:border-slate-700 shadow-sm">
+                  <code className="text-sm font-mono text-foreground whitespace-pre-wrap font-semibold">
                     {sql}
                   </code>
                 </pre>
-                <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7"
+                        className="h-9 w-9 rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-md hover:shadow-lg hover:scale-110 transition-all duration-200"
                         onClick={handleCopy}
                       >
                         {copied ? (
-                          <Check className="h-3.5 w-3.5 text-success" />
+                          <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
                         ) : (
-                          <Copy className="h-3.5 w-3.5" />
+                          <Copy className="h-4 w-4" />
                         )}
                       </Button>
                     </TooltipTrigger>
@@ -107,10 +109,10 @@ export function SQLDisplay({ sql, editable = false, onEdit, showExplanation = tr
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7"
+                          className="h-9 w-9 rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-md hover:shadow-lg hover:scale-110 transition-all duration-200"
                           onClick={() => setIsEditing(true)}
                         >
-                          <Edit2 className="h-3.5 w-3.5" />
+                          <Edit2 className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>Edit SQL</TooltipContent>
@@ -121,9 +123,11 @@ export function SQLDisplay({ sql, editable = false, onEdit, showExplanation = tr
             )}
 
             {showExplanation && !isEditing && (
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-accent/50 text-sm">
-                <Info className="h-4 w-4 text-accent-foreground mt-0.5 flex-shrink-0" />
-                <p className="text-accent-foreground">{getExplanation(sql)}</p>
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-sm border-2 border-blue-200 dark:border-blue-800 shadow-sm">
+                <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 shadow-md">
+                  <Info className="h-4 w-4 text-white flex-shrink-0" />
+                </div>
+                <p className="text-blue-900 dark:text-blue-200 font-medium">{getExplanation(sql)}</p>
               </div>
             )}
           </div>
