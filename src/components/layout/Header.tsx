@@ -52,6 +52,7 @@ const mainNavItems = [
   { icon: History, label: 'History', path: '/history', color: 'text-orange-500' },
   { icon: FileText, label: 'Reports', path: '/reports', color: 'text-green-500' },
   { icon: BarChart3, label: 'Analytics', path: '/analytics', color: 'text-pink-500' },
+  { icon: Settings, label: 'Settings', path: '/settings', color: 'text-slate-500' },
 ];
 
 const adminNavItems = [
@@ -124,9 +125,9 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
                   href={item.path}
                   className={cn(
                     'flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-all duration-200',
-                    'hover:bg-indigo-100 dark:hover:bg-indigo-900/50 hover:scale-105 hover:shadow-md',
+                    'hover:bg-indigo-100 dark:hover:bg-indigo-900/50 hover:scale-105',
                     isActive 
-                      ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md' 
+                      ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-[0_2px_8px_-2px_rgba(99,102,241,0.4)]' 
                       : 'text-slate-700 dark:text-slate-300 hover:text-indigo-900 dark:hover:text-indigo-200'
                   )}
                 >

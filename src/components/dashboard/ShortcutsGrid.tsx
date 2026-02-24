@@ -52,12 +52,12 @@ export function ShortcutsGrid({ className }: ShortcutsGridProps) {
   const router = useRouter();
 
   return (
-    <div className={cn('grid grid-cols-2 md:grid-cols-4 gap-5', className)}>
+    <div className={cn('grid grid-cols-2 md:grid-cols-4 gap-4', className)}>
       {shortcuts.map((shortcut, index) => (
         <Card
           key={shortcut.path}
           className={cn(
-            'relative p-6 cursor-pointer border-0 shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 group overflow-hidden bg-white dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl'
+            'relative p-4 cursor-pointer border border-[#E5E7EB] dark:border-slate-700 shadow-sm hover:shadow-md hover:scale-[1.01] hover:border-blue-300 dark:hover:border-blue-700/50 transition-all duration-300 group overflow-hidden bg-white dark:bg-slate-900 rounded-xl'
           )}
           onClick={() => router.push(shortcut.path)}
         >
@@ -69,14 +69,19 @@ export function ShortcutsGrid({ className }: ShortcutsGridProps) {
           <div className="relative z-10">
             <div
               className={cn(
-                'w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300 bg-gradient-to-br',
+                'relative w-11 h-11 rounded-xl flex items-center justify-center mb-3 shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-300 bg-gradient-to-br',
                 shortcut.gradient
               )}
             >
-              <shortcut.icon className="h-7 w-7 text-white" />
+              {/* Icon glow effect */}
+              <div className={cn(
+                'absolute inset-0 rounded-xl blur-md opacity-0 group-hover:opacity-50 transition-opacity duration-300 bg-gradient-to-br',
+                shortcut.gradient
+              )} />
+              <shortcut.icon className="h-5 w-5 text-white relative z-10" />
             </div>
-            <h4 className="font-bold text-base mb-2 text-slate-900 dark:text-white group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{shortcut.label}</h4>
-            <p className="text-sm text-muted-foreground font-medium">{shortcut.description}</p>
+            <h4 className="font-bold text-sm mb-1.5 text-slate-900 dark:text-white group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{shortcut.label}</h4>
+            <p className="text-xs text-muted-foreground font-medium">{shortcut.description}</p>
             <ArrowRight className="absolute bottom-5 right-5 h-5 w-5 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
           </div>
         </Card>

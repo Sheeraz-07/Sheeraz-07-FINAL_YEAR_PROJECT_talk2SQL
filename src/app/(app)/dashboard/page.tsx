@@ -79,25 +79,25 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/20">
-      <div className="space-y-8 p-8 animate-fade-in max-w-[1600px] mx-auto">
+    <div className="min-h-screen bg-[#F9FAFB] dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <div className="space-y-5 p-6 animate-fade-in max-w-[1600px] mx-auto">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-0.5">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">Dashboard Overview</h1>
-          <p className="text-muted-foreground mt-2 flex items-center gap-2 font-medium">
-            <Calendar className="h-4 w-4" />
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Dashboard Overview</h1>
+          <p className="text-muted-foreground mt-1.5 flex items-center gap-2 font-medium text-sm">
+            <Calendar className="h-3.5 w-3.5" />
             {currentDate}
           </p>
         </div>
-        <Button className="rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 px-6 py-6 text-white border-0 hover:scale-105">
+        <Button className="h-9 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 px-5 text-white border-0 text-sm font-semibold">
           <ArrowUpRight className="h-4 w-4 mr-2" />
           View Reports
         </Button>
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MetricCard
           title="Today's Sales"
           value={`PKR ${(mockStats.todaySales / 1000).toFixed(0)}K`}
@@ -132,12 +132,12 @@ export default function DashboardPage() {
       <ShortcutsGrid />
 
       {/* Charts and Recent Queries Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Sales by Category Chart */}
-        <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 bg-gradient-to-r from-transparent to-indigo-50/50 dark:to-indigo-950/30">
-            <CardTitle className="text-xl font-bold">Weekly Sales by Category</CardTitle>
-            <Button variant="ghost" size="sm" className="text-sm rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/50 font-semibold">
+        <Card className="border border-[#edf2f7] dark:border-slate-700/60 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1),0_4px_6px_-2px_rgba(0,0,0,0.05)] hover:border-blue-200 dark:hover:border-blue-700/50 transition-all duration-300 bg-gradient-to-b from-white to-[#fafafa] dark:from-slate-900 dark:to-slate-900/95 rounded-xl overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 bg-gradient-to-br from-indigo-50/30 to-blue-50/20 dark:from-indigo-950/20 dark:to-blue-950/10">
+            <CardTitle className="text-base font-bold text-slate-900 dark:text-slate-50">Weekly Sales by Category</CardTitle>
+            <Button variant="ghost" size="sm" className="text-xs rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/50 font-semibold px-3 py-1.5 hover:border hover:border-indigo-200 dark:hover:border-indigo-700/50">
               View Details
             </Button>
           </CardHeader>
@@ -145,30 +145,33 @@ export default function DashboardPage() {
             <div className="h-[320px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={salesChartData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200 dark:stroke-slate-700/50" opacity={0.5} />
                   <XAxis 
                     dataKey="name" 
                     className="text-xs"
-                    stroke="hsl(var(--muted-foreground))"
+                    stroke="#94a3b8"
+                    tick={{ fill: '#64748b' }}
                   />
                   <YAxis 
                     className="text-xs" 
                     tickFormatter={(value) => `${value / 1000}K`}
-                    stroke="hsl(var(--muted-foreground))"
+                    stroke="#94a3b8"
+                    tick={{ fill: '#64748b' }}
                   />
                   <Tooltip
                     formatter={(value: number) => `PKR ${value.toLocaleString()}`}
                     contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #edf2f7',
                       borderRadius: '12px',
                       padding: '12px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                     }}
-                    labelStyle={{ fontWeight: 600, marginBottom: '8px' }}
+                    labelStyle={{ fontWeight: 600, marginBottom: '8px', color: '#1e293b' }}
                   />
-                  <Bar dataKey="mens" name="Men's" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="womens" name="Women's" fill="hsl(var(--success))" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="kids" name="Kids" fill="hsl(var(--warning))" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="mens" name="Men's" fill="#0ea5e9" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="womens" name="Women's" fill="#06b6d4" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="kids" name="Kids" fill="#14b8a6" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
