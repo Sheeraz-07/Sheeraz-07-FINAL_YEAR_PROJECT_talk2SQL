@@ -32,49 +32,57 @@ export function InsightsPanel({ insights, className }: InsightsPanelProps) {
   const getColors = (trend: string) => {
     switch (trend) {
       case 'up':
-        return 'bg-success/10 text-success border-success/20';
+        return 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800';
       case 'down':
-        return 'bg-destructive/10 text-destructive border-destructive/20';
+        return 'bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800';
       case 'alert':
-        return 'bg-warning/10 text-warning border-warning/20';
+        return 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800';
       default:
-        return 'bg-primary/10 text-primary border-primary/20';
+        return 'bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800';
     }
   };
 
   return (
-    <Card className={cn('border hover:border-accent/50 hover:shadow-xl transition-all duration-300 overflow-hidden', className)}>
-      <div className="flex items-center justify-between p-5 pb-4 border-b bg-gradient-to-br from-chart-4/5 to-transparent">
+    <Card className={cn('border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl', className)}>
+      <div className="flex items-center justify-between p-6 pb-4 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-br from-purple-50 to-pink-50/50 dark:from-purple-950/50 dark:to-pink-950/30">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-2xl bg-gradient-to-br from-chart-4/20 to-chart-4/10 shadow-sm">
-            <Lightbulb className="h-5 w-5 text-chart-4" />
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 shadow-lg">
+            <Lightbulb className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h3 className="font-bold text-base">AI Insights</h3>
-            <p className="text-xs text-muted-foreground font-semibold">Smart recommendations</p>
+            <h3 className="font-bold text-lg">AI Insights</h3>
+            <p className="text-sm text-muted-foreground font-medium">Smart recommendations</p>
           </div>
         </div>
       </div>
-      <div className="p-5 pt-4 space-y-3">
+      <div className="p-6 space-y-4">
         {insights.map((insight, index) => {
           const Icon = getIcon(insight.trend);
           return (
             <div
               key={insight.id}
               className={cn(
-                'p-4 rounded-2xl border-2 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] cursor-pointer group hover:border-accent/50 dark:hover:border-accent/60',
+                'p-5 rounded-2xl border-2 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] cursor-pointer group',
                 getColors(insight.trend)
               )}
             >
-              <div className="flex items-start gap-3">
-                <Icon className="h-5 w-5 mt-0.5 flex-shrink-0 group-hover:scale-110 transition-transform" />
+              <div className="flex items-start gap-4">
+                <div className={cn(
+                  'p-2.5 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300',
+                  insight.trend === 'up' && 'bg-gradient-to-br from-green-500 to-emerald-600',
+                  insight.trend === 'down' && 'bg-gradient-to-br from-red-500 to-rose-600',
+                  insight.trend === 'alert' && 'bg-gradient-to-br from-orange-500 to-amber-600',
+                  insight.trend === 'neutral' && 'bg-gradient-to-br from-indigo-500 to-blue-600'
+                )}>
+                  <Icon className="h-5 w-5 text-white" />
+                </div>
                 <div className="flex-1">
-                  <p className="font-bold text-foreground text-sm">{insight.title}</p>
-                  <p className="text-xs text-muted-foreground mt-1.5 font-semibold">
+                  <p className="font-bold text-slate-900 dark:text-white text-base">{insight.title}</p>
+                  <p className="text-sm text-muted-foreground mt-2 font-medium leading-relaxed">
                     {insight.description}
                   </p>
                   {insight.value && (
-                    <p className="text-xl font-bold mt-2.5 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">{insight.value}</p>
+                    <p className="text-2xl font-bold mt-3 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">{insight.value}</p>
                   )}
                 </div>
               </div>
