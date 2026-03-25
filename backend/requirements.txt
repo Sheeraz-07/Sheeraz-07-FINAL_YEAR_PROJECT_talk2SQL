@@ -14,7 +14,7 @@ pydantic-settings==2.7.1
 # ── Database (Supabase / PostgreSQL) ────────────────────────
 sqlalchemy[asyncio]==2.0.36
 asyncpg==0.30.0
-pgvector==0.3.6
+pyodbc==5.2.0
 
 # ── LLM Client (OpenAI-compatible for LongCat) ─────────────
 openai==1.58.1

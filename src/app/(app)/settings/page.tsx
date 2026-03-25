@@ -16,12 +16,14 @@ import {
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuthStore } from '@/stores/authStore';
+import { useQueryStore } from '@/stores/queryStore';
 import { useTheme } from '@/hooks/useTheme';
 import { toast } from 'sonner';
 import { User, Palette, Bell, Shield } from 'lucide-react';
 
 export default function SettingsPage() {
   const { user, updateUser } = useAuthStore();
+  const { selectedDatabase, setDatabase } = useQueryStore();
   const { theme, setTheme } = useTheme();
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -36,6 +38,27 @@ export default function SettingsPage() {
   const handleSaveProfile = () => {
     updateUser({ name, preferredLanguage: language });
     toast.success('Profile updated successfully');
+  };
+
+  const handleRefreshSchema = async () => {
+    try {
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_BASE}/api/schema/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ database: selectedDatabase }),
+      });
+
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(payload?.detail || payload?.error || `HTTP ${response.status}`);
+      }
+
+      toast.success('Schema cache refreshed successfully');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to refresh schema cache';
+      toast.error(message);
+    }
   };
 
   return (
@@ -166,16 +189,28 @@ export default function SettingsPage() {
                     Database used for new queries
                   </p>
                 </div>
-                <Select defaultValue="main_db">
+                <Select value={selectedDatabase} onValueChange={setDatabase}>
                   <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="main_db">Main Database</SelectItem>
-                    <SelectItem value="sales_db">Sales DB</SelectItem>
-                    <SelectItem value="analytics_db">Analytics DB</SelectItem>
+                    <SelectItem value="supabase">Supabase (Textile Industry DB)</SelectItem>
+                    <SelectItem value="sql_server">SQL Server (FurnitureFactoryDB)</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Schema refresh */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Schema Cache</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Refresh cached schema for the selected database
+                  </p>
+                </div>
+                <Button variant="outline" onClick={handleRefreshSchema}>
+                  Refresh Schema
+                </Button>
               </div>
 
               {/* Results per page */}

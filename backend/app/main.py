@@ -70,7 +70,7 @@ def create_app() -> FastAPI:
         version=settings.APP_VERSION,
         description=(
             "Talk2SQL Backend — Simplified for Query Generation. "
-            "Converts natural language to safe PostgreSQL queries on Supabase."
+            "Converts natural language to safe SQL for Supabase and SQL Server."
         ),
         lifespan=lifespan,
     )
@@ -91,13 +91,6 @@ def create_app() -> FastAPI:
     @application.get("/health", tags=["ops"])
     async def health_check():
         return {"status": "ok", "version": settings.APP_VERSION}
-
-    # Admin endpoint: force schema re-ingestion
-    @application.post("/admin/reingest-schema", tags=["admin"])
-    async def reingest_schema():
-        """Force re-ingestion of schema embeddings (admin use only)."""
-        result = await ingest_schema(force=True)
-        return {"status": "ok", "result": result}
 
     return application
 

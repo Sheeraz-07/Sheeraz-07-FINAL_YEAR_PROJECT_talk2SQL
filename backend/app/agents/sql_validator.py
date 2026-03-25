@@ -47,8 +47,11 @@ _BLOCKED_PATTERNS: list[tuple[re.Pattern, str]] = [
     (re.compile(r"\bCALL\b", re.IGNORECASE), "CALL statements are not allowed"),
     (re.compile(r"--", re.IGNORECASE), "SQL comments (--) are not allowed"),
     (re.compile(r"/\*", re.IGNORECASE), "Block comments (/*) are not allowed"),
-    (re.compile(r"\bpg_", re.IGNORECASE), "Access to pg_ system catalogs is not allowed"),
     (re.compile(r"\binformation_schema\b", re.IGNORECASE), "Access to information_schema is not allowed"),
+]
+
+_BLOCKED_PATTERNS_SUPABASE: list[tuple[re.Pattern, str]] = [
+    (re.compile(r"\bpg_", re.IGNORECASE), "Access to pg_ system catalogs is not allowed"),
 ]
 
 # ── Allowed top-level keywords ──────────────────────────────────────────
@@ -62,7 +65,7 @@ _ALLOWED_START = re.compile(
 # ── Public API ──────────────────────────────────────────────────────────
 
 
-def validate_sql(sql: str) -> str:
+def validate_sql(sql: str, database: str = "supabase") -> str:
     """
     Validate a SQL string for safety and structural integrity.
 
@@ -98,6 +101,11 @@ def validate_sql(sql: str) -> str:
     for pattern, message in _BLOCKED_PATTERNS:
         if pattern.search(stripped):
             raise SQLValidationError(message, sql=sql)
+
+    if database == "supabase":
+        for pattern, message in _BLOCKED_PATTERNS_SUPABASE:
+            if pattern.search(stripped):
+                raise SQLValidationError(message, sql=sql)
 
     # 3. Balanced parentheses check
     depth = 0

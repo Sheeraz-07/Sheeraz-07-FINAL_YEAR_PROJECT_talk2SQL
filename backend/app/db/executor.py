@@ -15,6 +15,7 @@ passed through ``sql_validator.validate_sql()``.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from typing import Any
@@ -22,12 +23,13 @@ from typing import Any
 from sqlalchemy import text
 
 from app.core.longcat_client import chat_completion
+from app.db.sql_server import get_sql_server_connection
 from app.db.supabase import get_engine
 
 logger = logging.getLogger(__name__)
 
 
-async def execute_readonly_query(sql: str) -> dict[str, Any]:
+async def execute_readonly_query(sql: str, database: str = "supabase") -> dict[str, Any]:
     """
     Execute a read-only SQL query and return structured results.
 
@@ -45,6 +47,9 @@ async def execute_readonly_query(sql: str) -> dict[str, Any]:
           - ``row_count``: int
           - ``execution_time``: float  — seconds
     """
+    if database == "sql_server":
+        return await asyncio.to_thread(_execute_sql_server_query_sync, sql)
+
     engine = get_engine()
     start = time.perf_counter()
 
@@ -69,7 +74,45 @@ async def execute_readonly_query(sql: str) -> dict[str, Any]:
         "columns": columns,
         "row_count": len(rows),
         "execution_time": elapsed,
+        "connected_database": "supabase",
+        "sql_dialect": "postgresql",
     }
+
+
+def _execute_sql_server_query_sync(sql: str) -> dict[str, Any]:
+    """Execute a read-only query on SQL Server via pyodbc."""
+    conn = None
+    start = time.perf_counter()
+
+    try:
+        conn = get_sql_server_connection()
+        cursor = conn.cursor()
+        cursor.execute(sql)
+
+        columns = [col[0] for col in (cursor.description or [])]
+        raw_rows = cursor.fetchall() if columns else []
+        rows = [dict(zip(columns, row)) for row in raw_rows]
+
+        elapsed = round(time.perf_counter() - start, 4)
+
+        logger.info(
+            "Executed SQL Server query (%d rows, %.4fs): %s",
+            len(rows),
+            elapsed,
+            sql[:120],
+        )
+
+        return {
+            "rows": rows,
+            "columns": columns,
+            "row_count": len(rows),
+            "execution_time": elapsed,
+            "connected_database": "sql_server",
+            "sql_dialect": "tsql",
+        }
+    finally:
+        if conn is not None:
+            conn.close()
 
 
 async def generate_explanation(

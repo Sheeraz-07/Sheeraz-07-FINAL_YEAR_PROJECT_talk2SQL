@@ -8,6 +8,7 @@ import { LanguageToggle } from './LanguageToggle';
 import { SQLDisplay } from './SQLDisplay';
 import { LoadingState } from './LoadingState';
 import { DataTable } from './DataTable';
+import { VisualizationPanel } from './VisualizationPanel';
 import { useQueryStore } from '@/stores/queryStore';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +41,7 @@ export function QueryInterface() {
     results,
     isLoading,
     loadingStep,
+    error,
     language,
     setQuery,
     setLanguage,
@@ -48,6 +50,7 @@ export function QueryInterface() {
   } = useQueryStore();
 
   const [isFocused, setIsFocused] = useState(false);
+  const [showVisualizations, setShowVisualizations] = useState(false);
 
   const handleSubmit = useCallback(
     async (e?: React.FormEvent) => {
@@ -78,6 +81,10 @@ export function QueryInterface() {
 
   const handleSaveQuery = () => {
     toast.success('Query saved to favorites');
+  };
+
+  const handleVisualize = () => {
+    setShowVisualizations((prev) => !prev);
   };
 
   return (
@@ -174,6 +181,13 @@ export function QueryInterface() {
       {/* Loading State */}
       {isLoading && <LoadingState currentStep={loadingStep} />}
 
+      {/* Error State */}
+      {error && !isLoading && (
+        <Card className="p-4 border-2 border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800">
+          <p className="text-sm font-semibold text-red-700 dark:text-red-300">{error}</p>
+        </Card>
+      )}
+
       {/* Results */}
       {results && !isLoading && (
         <div className="space-y-6 animate-fade-in">
@@ -192,9 +206,9 @@ export function QueryInterface() {
                 <Save className="h-4 w-4 mr-2" />
                 Save
               </Button>
-              <Button variant="outline" size="sm" className="rounded-full font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 px-5 h-10">
+              <Button variant="outline" size="sm" onClick={handleVisualize} className="rounded-full font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 px-5 h-10">
                 <BarChart3 className="h-4 w-4 mr-2" />
-                Visualize
+                {showVisualizations ? 'Hide Charts' : 'Visualize'}
               </Button>
               <Button variant="outline" size="sm" onClick={handleSubmit} className="rounded-full font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 px-5 h-10">
                 <RefreshCw className="h-4 w-4 mr-2" />
@@ -205,6 +219,9 @@ export function QueryInterface() {
 
           {/* SQL Display */}
           <SQLDisplay sql={results.generatedSQL} editable showExplanation />
+
+          {/* Visualization Recommendations */}
+          {showVisualizations && <VisualizationPanel result={results} />}
 
           {/* Data Table */}
           <DataTable data={results.results} columns={results.columns} />

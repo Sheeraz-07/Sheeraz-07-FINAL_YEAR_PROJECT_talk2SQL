@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.utils.sql_rules import SQL_RULES_BLOCK
+from app.utils.sql_rules import get_sql_rules_block
 
 
 def build_sql_prompt(
@@ -26,6 +26,7 @@ def build_sql_prompt(
     schema_snippets: list[dict],
     user_hints: dict[str, Any] | None = None,
     session_context: list[dict] | None = None,
+    database: str = "supabase",
 ) -> list[dict]:
     """
     Build the complete message list for the SQL generation LLM call.
@@ -51,13 +52,20 @@ def build_sql_prompt(
 
     # ── Build personalisation section ───────────────────────────────
     hints_text = _format_user_hints(user_hints) if user_hints else ""
+    rules_block = get_sql_rules_block(database)
+
+    dialect_label = "PostgreSQL"
+    runtime_label = "Supabase"
+    if database == "sql_server":
+        dialect_label = "Microsoft SQL Server (T-SQL)"
+        runtime_label = "FurnitureFactoryDB"
 
     # ── System prompt ───────────────────────────────────────────────
     system_content = f"""\
-You are an expert PostgreSQL SQL generator for a garment manufacturing ERP system
-running on Supabase.
+You are an expert {dialect_label} SQL generator for an enterprise analytics system
+running on {runtime_label}.
 
-{SQL_RULES_BLOCK}
+{rules_block}
 
 === AVAILABLE SCHEMA (retrieve via similarity — ONLY these tables/columns exist) ===
 {schema_text}
@@ -66,7 +74,7 @@ running on Supabase.
 {hints_text}
 
 TASK:
-Given the user's natural-language question, generate a SINGLE valid PostgreSQL
+Given the user's natural-language question, generate a SINGLE valid
 SELECT query.  Your response must contain ONLY the SQL — no markdown fences,
 no explanations, no comments, no semicolons at the end.
 """

@@ -32,6 +32,7 @@ async def generate_sql(
     schema_snippets: list[dict],
     user_hints: dict | None = None,
     session_context: list[dict] | None = None,
+    database: str = "supabase",
 ) -> str:
     """
     Generate a PostgreSQL SQL query from a natural-language question.
@@ -65,6 +66,7 @@ async def generate_sql(
         schema_snippets=schema_snippets,
         user_hints=user_hints,
         session_context=session_context,
+        database=database,
     )
 
     raw = await chat_completion(messages=messages, temperature=0.0)

@@ -151,6 +151,62 @@ export interface QueryResult {
   createdAt: Date;
   status: 'success' | 'error';
   error?: string;
+  visualization?: VisualizationResponse;
+}
+
+export type VisualizationChartType =
+  | 'bar'
+  | 'line'
+  | 'pie'
+  | 'scatter'
+  | 'histogram'
+  | 'box'
+  | 'area'
+  | 'stacked_bar'
+  | 'grouped_bar'
+  | 'table';
+
+export interface VisualizationChartSpec {
+  type: VisualizationChartType;
+  title?: string;
+  reason?: string;
+  x?: string;
+  y?: string;
+  labels?: string;
+  values?: string;
+  series?: string;
+}
+
+export interface VisualizationColumnMeta {
+  name: string;
+  type: 'numeric' | 'categorical' | 'datetime' | 'boolean';
+  cardinality: number;
+  null_ratio: number;
+  sample_values: string[];
+}
+
+export interface VisualizationMetadata {
+  row_count: number;
+  columns: VisualizationColumnMeta[];
+  column_names: string[];
+  numeric_columns: string[];
+  categorical_columns: string[];
+  datetime_columns: string[];
+  boolean_columns: string[];
+  aggregation_present: boolean;
+  is_grouped_data: boolean;
+  null_heavy: boolean;
+  needs_table_only: boolean;
+  schema_table_count: number;
+  database: string;
+}
+
+export interface VisualizationResponse {
+  metadata: VisualizationMetadata;
+  default_charts: VisualizationChartSpec[];
+  available_charts: VisualizationChartType[];
+  fallback_message?: string;
+  suggestion?: string;
 }
 
 export interface QueryHistory {

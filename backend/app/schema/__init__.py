@@ -1,1 +1,1 @@
-# Schema module: schema ingestion and retrieval
+# Schema module: runtime schema retrieval
