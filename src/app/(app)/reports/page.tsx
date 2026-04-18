@@ -45,84 +45,194 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useQueryStore } from '@/stores/queryStore';
+import { useAuthStore } from '@/stores/authStore';
 
 interface Report {
   id: string;
   title: string;
-  description: string;
+  prompt: string;
   type: 'sales' | 'inventory' | 'analytics' | 'custom';
   chartType: 'bar' | 'line' | 'pie';
-  createdAt: Date;
-  status: 'draft' | 'generated' | 'scheduled';
-  schedule?: string;
+  createdAt: string;
+  status: 'draft' | 'generated' | 'error';
+  database: string;
+  sql?: string;
+  data: Record<string, unknown>[];
+  columns: string[];
+  rowCount: number;
+  executionTime: number;
+  error?: string;
 }
 
-const mockReports: Report[] = [
+const reportTemplates = [
   {
-    id: '1',
-    title: 'Weekly Sales Report',
-    description: 'Sales overview for the past week',
-    type: 'sales',
-    chartType: 'bar',
-    createdAt: new Date(Date.now() - 86400000),
-    status: 'generated',
+    id: 'daily-sales',
+    title: 'Daily Sales Report',
+    icon: BarChart2,
+    prompt: 'Create a daily sales report showing total sales, top products, and sales by category for the latest available day.',
+    chartType: 'bar' as const,
   },
   {
-    id: '2',
-    title: 'Monthly Inventory Analysis',
-    description: 'Stock levels and movement analysis',
-    type: 'inventory',
-    chartType: 'line',
-    createdAt: new Date(Date.now() - 172800000),
-    status: 'scheduled',
-    schedule: 'Monthly',
+    id: 'weekly-inventory',
+    title: 'Weekly Inventory',
+    icon: LineChart,
+    prompt: 'Create an inventory report for the past 7 days with low stock items, material movement, and current stock by category.',
+    chartType: 'line' as const,
   },
   {
-    id: '3',
-    title: 'Customer Analytics',
-    description: 'Customer segmentation and behavior',
-    type: 'analytics',
-    chartType: 'pie',
-    createdAt: new Date(Date.now() - 259200000),
-    status: 'generated',
+    id: 'monthly-analytics',
+    title: 'Monthly Analytics',
+    icon: PieChart,
+    prompt: 'Create a monthly analytics report with customer trends, revenue distribution, and high-level KPIs for the current month.',
+    chartType: 'pie' as const,
   },
 ];
 
-const reportTemplates = [
-  { id: 'daily-sales', title: 'Daily Sales Report', icon: BarChart2 },
-  { id: 'weekly-inventory', title: 'Weekly Inventory', icon: LineChart },
-  { id: 'monthly-analytics', title: 'Monthly Analytics', icon: PieChart },
-];
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export default function ReportsPage() {
-  const [reports, setReports] = useState<Report[]>(mockReports);
+  const selectedDatabase = useQueryStore((state) => state.selectedDatabase);
+  const token = useAuthStore((state) => state.token);
+  const [reports, setReports] = useLocalStorage<Report[]>('report-storage', []);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [activeReport, setActiveReport] = useState<Report | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [newReport, setNewReport] = useState({
     title: '',
-    description: '',
+    prompt: '',
     chartType: 'bar',
   });
 
-  const handleCreateReport = () => {
-    const report: Report = {
-      id: crypto.randomUUID(),
-      title: newReport.title,
-      description: newReport.description,
+  const handleCreateReport = async () => {
+    if (!newReport.title.trim() || !newReport.prompt.trim()) {
+      toast.error('Title and report prompt are required');
+      return;
+    }
+
+    const draftId = crypto.randomUUID();
+    const createdAt = new Date().toISOString();
+
+    const draftReport: Report = {
+      id: draftId,
+      title: newReport.title.trim(),
+      prompt: newReport.prompt.trim(),
       type: 'custom',
       chartType: newReport.chartType as 'bar' | 'line' | 'pie',
-      createdAt: new Date(),
+      createdAt,
       status: 'draft',
+      database: selectedDatabase,
+      data: [],
+      columns: [],
+      rowCount: 0,
+      executionTime: 0,
     };
-    setReports([report, ...reports]);
-    setIsCreateOpen(false);
-    setNewReport({ title: '', description: '', chartType: 'bar' });
-    toast.success('Report created successfully');
+
+    setReports([draftReport, ...reports]);
+    setIsGenerating(true);
+
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_BASE}/api/query`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          user_id: '1',
+          session_id: crypto.randomUUID(),
+          query: newReport.prompt.trim(),
+          database: selectedDatabase,
+        }),
+      });
+
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload || payload.status === 'error') {
+        throw new Error(payload?.error || payload?.detail || `HTTP ${response.status}`);
+      }
+
+      setReports((current) =>
+        current.map((report) =>
+          report.id === draftId
+            ? {
+                ...report,
+                status: 'generated',
+                sql: payload.sql || '',
+                data: payload.data || [],
+                columns: payload.columns || [],
+                rowCount: payload.row_count || 0,
+                executionTime: payload.execution_time || 0,
+              }
+            : report
+        )
+      );
+
+      setIsCreateOpen(false);
+      setNewReport({ title: '', prompt: '', chartType: 'bar' });
+      toast.success('Report generated successfully');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unable to generate report';
+      setReports((current) =>
+        current.map((report) =>
+          report.id === draftId
+            ? {
+                ...report,
+                status: 'error',
+                error: message,
+              }
+            : report
+        )
+      );
+      toast.error(`Report generation failed: ${message}`);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleDeleteReport = (id: string) => {
     setReports(reports.filter((r) => r.id !== id));
     toast.success('Report deleted');
+  };
+
+  const handleViewReport = (report: Report) => {
+    setActiveReport(report);
+    setIsViewOpen(true);
+  };
+
+  const handleExportReport = (report: Report) => {
+    if (!report.data.length) {
+      toast.error('This report has no data to export');
+      return;
+    }
+
+    const headers = report.columns.length ? report.columns : Object.keys(report.data[0]);
+    const escapeCSV = (value: unknown) => {
+      const str = String(value ?? '');
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const lines = [
+      headers.join(','),
+      ...report.data.map((row) => headers.map((header) => escapeCSV(row[header])).join(',')),
+    ];
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${report.title.replace(/\s+/g, '_').toLowerCase()}_${report.id.slice(0, 8)}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+
+    toast.success('Report exported as CSV');
   };
 
   const getChartIcon = (type: string) => {
@@ -142,10 +252,10 @@ export default function ReportsPage() {
     switch (status) {
       case 'generated':
         return 'bg-emerald-500/20 dark:bg-emerald-500/30 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 backdrop-blur-sm';
-      case 'scheduled':
-        return 'bg-blue-500/20 dark:bg-blue-500/30 text-blue-700 dark:text-blue-300 border border-blue-500/30 backdrop-blur-sm';
       case 'draft':
         return 'bg-slate-500/20 dark:bg-slate-500/30 text-slate-700 dark:text-slate-300 border border-slate-500/30 backdrop-blur-sm';
+      case 'error':
+        return 'bg-red-500/20 dark:bg-red-500/30 text-red-700 dark:text-red-300 border border-red-500/30 backdrop-blur-sm';
       default:
         return 'bg-slate-500/20 dark:bg-slate-500/30 text-slate-700 dark:text-slate-300 border border-slate-500/30 backdrop-blur-sm';
     }
@@ -155,21 +265,21 @@ export default function ReportsPage() {
     switch (status) {
       case 'generated':
         return 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]';
-      case 'scheduled':
-        return 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]';
       case 'draft':
         return 'bg-slate-500 shadow-[0_0_8px_rgba(100,116,139,0.6)]';
+      case 'error':
+        return 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]';
       default:
         return 'bg-slate-500 shadow-[0_0_8px_rgba(100,116,139,0.6)]';
     }
   };
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: string) => {
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
-    }).format(date);
+    }).format(new Date(date));
   };
 
   return (
@@ -186,7 +296,7 @@ export default function ReportsPage() {
               <div>
                 <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-900 via-indigo-900 to-purple-900 dark:from-white dark:via-indigo-200 dark:to-purple-200 bg-clip-text text-transparent">Reports</h2>
                 <p className="text-slate-600 dark:text-slate-400 text-sm mt-1 font-medium">
-                  Generate and manage your data reports
+                  Generate report from your current database ({selectedDatabase === 'sql_server' ? 'SQL Server' : 'Supabase'})
                 </p>
               </div>
             </div>
@@ -202,7 +312,7 @@ export default function ReportsPage() {
             <DialogHeader>
               <DialogTitle className="text-xl font-bold">Create New Report</DialogTitle>
               <DialogDescription className="text-slate-600 dark:text-slate-400">
-                Configure your custom report settings
+                Enter a title and prompt. The prompt is used to generate report data from your selected database.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -219,13 +329,13 @@ export default function ReportsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm font-medium text-slate-700 dark:text-slate-300">Description</Label>
+                <Label htmlFor="prompt" className="text-sm font-medium text-slate-700 dark:text-slate-300">Report Prompt / Description</Label>
                 <Textarea
-                  id="description"
-                  placeholder="What does this report show?"
-                  value={newReport.description}
+                  id="prompt"
+                  placeholder="Example: Create a report of top 10 products by revenue in the last 30 days, include quantity sold and total revenue."
+                  value={newReport.prompt}
                   onChange={(e) =>
-                    setNewReport({ ...newReport, description: e.target.value })
+                    setNewReport({ ...newReport, prompt: e.target.value })
                   }
                   className="rounded-xl border-slate-300 dark:border-slate-700 focus:border-indigo-500 dark:focus:border-indigo-500 min-h-[80px]"
                 />
@@ -253,8 +363,8 @@ export default function ReportsPage() {
               <Button variant="outline" onClick={() => setIsCreateOpen(false)} className="rounded-full font-medium hover:bg-slate-100 dark:hover:bg-slate-800">
                 Cancel
               </Button>
-              <Button onClick={handleCreateReport} disabled={!newReport.title} className="rounded-full font-semibold bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200">
-                Create Report
+              <Button onClick={handleCreateReport} disabled={isGenerating || !newReport.title || !newReport.prompt} className="rounded-full font-semibold bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200">
+                {isGenerating ? 'Generating...' : 'Generate Report'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -291,7 +401,7 @@ export default function ReportsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Scheduled</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{reports.filter(r => r.status === 'scheduled').length}</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{reports.filter(r => r.status === 'error').length}</p>
               </div>
               <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 shadow-lg">
                 <Clock className="h-5 w-5 text-white" />
@@ -314,7 +424,7 @@ export default function ReportsPage() {
             <button
               className="group relative overflow-hidden flex items-center gap-4 p-5 rounded-2xl border-2 border-blue-200/50 dark:border-blue-800/30 bg-gradient-to-br from-blue-50 via-sky-50 to-cyan-50 dark:from-blue-950/40 dark:via-sky-950/40 dark:to-cyan-950/40 hover:shadow-[0_0_30px_rgba(59,130,246,0.3)] hover:border-blue-400 dark:hover:border-blue-600 transition-all duration-300 hover:scale-[1.02] text-left"
               onClick={() => {
-                setNewReport({ title: reportTemplates[0].title, description: '', chartType: 'bar' });
+                setNewReport({ title: reportTemplates[0].title, prompt: reportTemplates[0].prompt, chartType: reportTemplates[0].chartType });
                 setIsCreateOpen(true);
               }}
             >
@@ -328,7 +438,7 @@ export default function ReportsPage() {
             <button
               className="group relative overflow-hidden flex items-center gap-4 p-5 rounded-2xl border-2 border-purple-200/50 dark:border-purple-800/30 bg-gradient-to-br from-purple-50 via-violet-50 to-fuchsia-50 dark:from-purple-950/40 dark:via-violet-950/40 dark:to-fuchsia-950/40 hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] hover:border-purple-400 dark:hover:border-purple-600 transition-all duration-300 hover:scale-[1.02] text-left"
               onClick={() => {
-                setNewReport({ title: reportTemplates[1].title, description: '', chartType: 'bar' });
+                setNewReport({ title: reportTemplates[1].title, prompt: reportTemplates[1].prompt, chartType: reportTemplates[1].chartType });
                 setIsCreateOpen(true);
               }}
             >
@@ -342,7 +452,7 @@ export default function ReportsPage() {
             <button
               className="group relative overflow-hidden flex items-center gap-4 p-5 rounded-2xl border-2 border-emerald-200/50 dark:border-emerald-800/30 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-emerald-950/40 dark:via-teal-950/40 dark:to-cyan-950/40 hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:border-emerald-400 dark:hover:border-emerald-600 transition-all duration-300 hover:scale-[1.02] text-left"
               onClick={() => {
-                setNewReport({ title: reportTemplates[2].title, description: '', chartType: 'bar' });
+                setNewReport({ title: reportTemplates[2].title, prompt: reportTemplates[2].prompt, chartType: reportTemplates[2].chartType });
                 setIsCreateOpen(true);
               }}
             >
@@ -436,27 +546,26 @@ export default function ReportsPage() {
                     </Badge>
                   </div>
                   <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-4 leading-relaxed">
-                    {report.description}
+                    {report.prompt}
                   </p>
                   <div className="flex items-center gap-3 text-xs">
                     <span className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-200/50 dark:border-slate-700/50">
                       <Calendar className="h-3.5 w-3.5" />
                       <span className="font-medium">{formatDate(report.createdAt)}</span>
                     </span>
-                    {report.schedule && (
-                      <span className="flex items-center gap-1.5 bg-indigo-100/80 dark:bg-indigo-950/80 backdrop-blur-sm text-indigo-700 dark:text-indigo-300 px-3 py-1.5 rounded-full border border-indigo-200/50 dark:border-indigo-800/50">
-                        <Clock className="h-3.5 w-3.5" />
-                        <span className="font-medium">{report.schedule}</span>
-                      </span>
-                    )}
+                    <span className="flex items-center gap-1.5 bg-indigo-100/80 dark:bg-indigo-950/80 backdrop-blur-sm text-indigo-700 dark:text-indigo-300 px-3 py-1.5 rounded-full border border-indigo-200/50 dark:border-indigo-800/50">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span className="font-medium">{report.rowCount} rows</span>
+                    </span>
                   </div>
+                  {report.error && <p className="text-xs text-red-500 mt-3">{report.error}</p>}
                 </div>
                 <div className={cn('relative z-10 flex items-center gap-2', viewMode === 'grid' && 'mt-5')}>
-                  <Button variant="outline" size="sm" className="rounded-xl font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:border-indigo-400 dark:hover:border-indigo-600 hover:scale-105 transition-all duration-200 text-xs backdrop-blur-sm">
+                  <Button variant="outline" size="sm" onClick={() => handleViewReport(report)} className="rounded-xl font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:border-indigo-400 dark:hover:border-indigo-600 hover:scale-105 transition-all duration-200 text-xs backdrop-blur-sm">
                     <Eye className="h-4 w-4 mr-1.5" />
                     View
                   </Button>
-                  <Button variant="outline" size="sm" className="rounded-xl font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:border-emerald-400 dark:hover:border-emerald-600 hover:text-emerald-700 dark:hover:text-emerald-300 hover:scale-105 transition-all duration-200 text-xs backdrop-blur-sm">
+                  <Button variant="outline" size="sm" onClick={() => handleExportReport(report)} className="rounded-xl font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:border-emerald-400 dark:hover:border-emerald-600 hover:text-emerald-700 dark:hover:text-emerald-300 hover:scale-105 transition-all duration-200 text-xs backdrop-blur-sm">
                     <Download className="h-4 w-4 mr-1.5" />
                     Export
                   </Button>
@@ -485,6 +594,98 @@ export default function ReportsPage() {
           );
         })}
       </div>
+
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent className="max-w-5xl w-[96vw] rounded-2xl border border-slate-200 dark:border-slate-800">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">{activeReport?.title || 'Report Details'}</DialogTitle>
+            <DialogDescription className="text-slate-600 dark:text-slate-400">
+              {activeReport?.prompt}
+            </DialogDescription>
+          </DialogHeader>
+
+          {activeReport && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+                  <p className="text-slate-500">Database</p>
+                  <p className="font-semibold text-slate-900 dark:text-white">{activeReport.database}</p>
+                </div>
+                <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+                  <p className="text-slate-500">Rows</p>
+                  <p className="font-semibold text-slate-900 dark:text-white">{activeReport.rowCount}</p>
+                </div>
+                <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+                  <p className="text-slate-500">Execution Time</p>
+                  <p className="font-semibold text-slate-900 dark:text-white">{activeReport.executionTime.toFixed(3)}s</p>
+                </div>
+                <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+                  <p className="text-slate-500">Status</p>
+                  <p className="font-semibold text-slate-900 dark:text-white">{activeReport.status}</p>
+                </div>
+              </div>
+
+              {activeReport.sql && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Generated SQL</Label>
+                  <pre className="max-h-40 overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-3 text-xs text-slate-700 dark:text-slate-300">
+                    {activeReport.sql}
+                  </pre>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Result Preview</Label>
+                {activeReport.data.length ? (
+                  <div className="max-h-72 overflow-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                    <table className="w-full text-xs">
+                      <thead className="bg-slate-100 dark:bg-slate-800">
+                        <tr>
+                          {(activeReport.columns.length
+                            ? activeReport.columns
+                            : Object.keys(activeReport.data[0])
+                          ).map((column) => (
+                            <th key={column} className="px-3 py-2 text-left font-semibold text-slate-700 dark:text-slate-200">
+                              {column}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {activeReport.data.slice(0, 50).map((row, index) => (
+                          <tr key={`${activeReport.id}-${index}`} className="border-t border-slate-200 dark:border-slate-700">
+                            {(activeReport.columns.length
+                              ? activeReport.columns
+                              : Object.keys(activeReport.data[0])
+                            ).map((column) => (
+                              <td key={`${activeReport.id}-${index}-${column}`} className="px-3 py-2 text-slate-600 dark:text-slate-300">
+                                {String(row[column] ?? '')}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500">No result data in this report.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsViewOpen(false)} className="rounded-full">
+              Close
+            </Button>
+            {activeReport && (
+              <Button onClick={() => handleExportReport(activeReport)} className="rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700">
+                Export CSV
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
