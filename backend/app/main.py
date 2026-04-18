@@ -24,6 +24,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.analytics import router as analytics_router
 from app.api.chat import router as chat_router
 from app.core.config import get_settings
 from app.db.supabase import dispose_engine
@@ -86,6 +87,7 @@ def create_app() -> FastAPI:
 
     # Mount routers
     application.include_router(chat_router, prefix="/api", tags=["query"])
+    application.include_router(analytics_router, prefix="/api", tags=["analytics"])
 
     # Health check
     @application.get("/health", tags=["ops"])

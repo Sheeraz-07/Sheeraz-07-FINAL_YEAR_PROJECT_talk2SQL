@@ -95,6 +95,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 export default function ReportsPage() {
   const selectedDatabase = useQueryStore((state) => state.selectedDatabase);
   const token = useAuthStore((state) => state.token);
+  const authUser = useAuthStore((state) => state.user);
   const [reports, setReports] = useLocalStorage<Report[]>('report-storage', []);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -144,7 +145,7 @@ export default function ReportsPage() {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          user_id: '1',
+          user_id: String(authUser?.user_id ?? 1),
           session_id: crypto.randomUUID(),
           query: newReport.prompt.trim(),
           database: selectedDatabase,

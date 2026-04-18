@@ -50,12 +50,17 @@ export function InsightsPanel({ insights, className }: InsightsPanelProps) {
             <Lightbulb className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h3 className="font-bold text-lg">AI Insights</h3>
-            <p className="text-sm text-muted-foreground font-medium">Smart recommendations</p>
+            <h3 className="font-bold text-lg">Business Insights</h3>
+            <p className="text-sm text-muted-foreground font-medium">Live database-driven recommendations</p>
           </div>
         </div>
       </div>
       <div className="p-6 space-y-4">
+        {insights.length === 0 && (
+          <div className="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-sm text-muted-foreground">
+            No insights available for the selected database and time range yet.
+          </div>
+        )}
         {insights.map((insight, index) => {
           const Icon = getIcon(insight.trend);
           return (

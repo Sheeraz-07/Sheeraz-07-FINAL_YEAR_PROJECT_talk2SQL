@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,176 +28,281 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
-import { TrendingUp, TrendingDown, Download, RefreshCw } from 'lucide-react';
+import { TrendingUp, TrendingDown, Download, RefreshCw, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useQueryStore } from '@/stores/queryStore';
+import { useAuthStore } from '@/stores/authStore';
+import { toast } from 'sonner';
 
-const salesData = [
-  { month: 'Jan', sales: 4000, revenue: 2400, target: 3500 },
-  { month: 'Feb', sales: 3000, revenue: 1398, target: 3500 },
-  { month: 'Mar', sales: 2000, revenue: 9800, target: 3500 },
-  { month: 'Apr', sales: 2780, revenue: 3908, target: 3500 },
-  { month: 'May', sales: 1890, revenue: 4800, target: 3500 },
-  { month: 'Jun', sales: 2390, revenue: 3800, target: 3500 },
-  { month: 'Jul', sales: 3490, revenue: 4300, target: 3500 },
-];
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const PIE_COLORS = ['#2563eb', '#10b981', '#f59e0b', '#a855f7', '#ef4444', '#0ea5e9'];
 
-const categoryData = [
-  { name: 'Electronics', value: 35, color: 'hsl(var(--chart-1))' },
-  { name: 'Clothing', value: 25, color: 'hsl(var(--chart-2))' },
-  { name: 'Food', value: 20, color: 'hsl(var(--chart-3))' },
-  { name: 'Others', value: 20, color: 'hsl(var(--chart-4))' },
-];
+interface KPIValue {
+  value: number;
+  change_pct: number;
+}
 
-const queryMetrics = [
-  { day: 'Mon', queries: 145, avgTime: 0.45 },
-  { day: 'Tue', queries: 198, avgTime: 0.52 },
-  { day: 'Wed', queries: 167, avgTime: 0.38 },
-  { day: 'Thu', queries: 234, avgTime: 0.41 },
-  { day: 'Fri', queries: 189, avgTime: 0.55 },
-  { day: 'Sat', queries: 98, avgTime: 0.32 },
-  { day: 'Sun', queries: 67, avgTime: 0.28 },
-];
+interface AnalyticsResponse {
+  request_id: string;
+  database: string;
+  range_days: number;
+  generated_at: string;
+  kpis: {
+    total_revenue: KPIValue;
+    total_orders: KPIValue;
+    avg_order_value: KPIValue;
+    fulfillment_rate: KPIValue;
+    attendance_rate: KPIValue;
+    low_stock_items: KPIValue;
+  };
+  charts: {
+    sales_trend: Array<{ day: string; revenue: number; orders: number }>;
+    attendance_trend: Array<{ day: string; attendance_rate: number }>;
+    category_mix: Array<{ category: string; revenue: number }>;
+    top_products: Array<{ product_name: string; units_sold: number; revenue: number }>;
+    department_productivity: Array<{ department: string; completed_qty: number; target_qty: number; completion_rate: number }>;
+  };
+  alerts: {
+    low_stock_items: Array<{ material_name: string; current_stock: number; reorder_level: number; deficit: number }>;
+  };
+}
 
-const kpiCards = [
-  { title: 'Total Revenue', value: 'PKR 2.4M', change: 12.5, trend: 'up' },
-  { title: 'Total Orders', value: '1,234', change: 8.2, trend: 'up' },
-  { title: 'Avg Order Value', value: 'PKR 1,945', change: -2.1, trend: 'down' },
-  { title: 'Conversion Rate', value: '3.2%', change: 0.5, trend: 'up' },
-];
+const EMPTY_ANALYTICS: AnalyticsResponse = {
+  request_id: '',
+  database: 'supabase',
+  range_days: 30,
+  generated_at: new Date().toISOString(),
+  kpis: {
+    total_revenue: { value: 0, change_pct: 0 },
+    total_orders: { value: 0, change_pct: 0 },
+    avg_order_value: { value: 0, change_pct: 0 },
+    fulfillment_rate: { value: 0, change_pct: 0 },
+    attendance_rate: { value: 0, change_pct: 0 },
+    low_stock_items: { value: 0, change_pct: 0 },
+  },
+  charts: {
+    sales_trend: [],
+    attendance_trend: [],
+    category_mix: [],
+    top_products: [],
+    department_productivity: [],
+  },
+  alerts: {
+    low_stock_items: [],
+  },
+};
+
+function compactDateLabel(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'PKR',
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function formatPercent(value: number) {
+  return `${value.toFixed(1)}%`;
+}
 
 export default function AnalyticsPage() {
-  const [dateRange, setDateRange] = useState('7d');
+  const selectedDatabase = useQueryStore((state) => state.selectedDatabase);
+  const token = useAuthStore((state) => state.token);
+  const [dateRange, setDateRange] = useState('30');
+  const [loading, setLoading] = useState(false);
+  const [analytics, setAnalytics] = useState<AnalyticsResponse>(EMPTY_ANALYTICS);
+
+  const fetchAnalytics = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        range_days: dateRange,
+        database: selectedDatabase,
+      });
+
+      const response = await fetch(`${API_BASE}/api/analytics?${params.toString()}`, {
+        method: 'GET',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload) {
+        throw new Error(payload?.detail || `HTTP ${response.status}`);
+      }
+
+      setAnalytics(payload as AnalyticsResponse);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to load analytics';
+      toast.error(`Analytics fetch failed: ${message}`);
+      setAnalytics(EMPTY_ANALYTICS);
+    } finally {
+      setLoading(false);
+    }
+  }, [dateRange, selectedDatabase, token]);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
+
+  const kpiCards = useMemo(
+    () => [
+      {
+        title: 'Total Revenue',
+        value: formatCurrency(analytics.kpis.total_revenue.value),
+        change: analytics.kpis.total_revenue.change_pct,
+      },
+      {
+        title: 'Total Orders',
+        value: analytics.kpis.total_orders.value.toLocaleString(),
+        change: analytics.kpis.total_orders.change_pct,
+      },
+      {
+        title: 'Avg Order Value',
+        value: formatCurrency(analytics.kpis.avg_order_value.value),
+        change: analytics.kpis.avg_order_value.change_pct,
+      },
+      {
+        title: 'Fulfillment Rate',
+        value: formatPercent(analytics.kpis.fulfillment_rate.value),
+        change: analytics.kpis.fulfillment_rate.change_pct,
+      },
+      {
+        title: 'Attendance Rate',
+        value: formatPercent(analytics.kpis.attendance_rate.value),
+        change: analytics.kpis.attendance_rate.change_pct,
+      },
+      {
+        title: 'Low Stock Items',
+        value: analytics.kpis.low_stock_items.value.toLocaleString(),
+        change: analytics.kpis.low_stock_items.change_pct,
+      },
+    ],
+    [analytics]
+  );
+
+  const handleExport = () => {
+    const blob = new Blob([JSON.stringify(analytics, null, 2)], {
+      type: 'application/json;charset=utf-8;',
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `analytics_${analytics.database}_${analytics.range_days}d.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    toast.success('Analytics snapshot exported');
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-bold mb-1">Analytics</h2>
+          <h2 className="text-2xl font-bold mb-1">Organization Analytics</h2>
           <p className="text-muted-foreground">
-            Data visualizations and insights
+            Decision intelligence from live {selectedDatabase === 'sql_server' ? 'SQL Server' : 'Supabase'} data
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-36">
+            <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-              <SelectItem value="1y">Last year</SelectItem>
+              <SelectItem value="7">Last 7 days</SelectItem>
+              <SelectItem value="30">Last 30 days</SelectItem>
+              <SelectItem value="90">Last 90 days</SelectItem>
+              <SelectItem value="365">Last year</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
+          <Button variant="outline" onClick={fetchAnalytics} disabled={loading}>
+            <RefreshCw className={cn('h-4 w-4 mr-2', loading && 'animate-spin')} />
             Refresh
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpiCards.map((kpi) => (
-          <Card key={kpi.title} className="p-6">
-            <p className="text-sm text-muted-foreground mb-2">{kpi.title}</p>
-            <p className="text-3xl font-bold mb-2">{kpi.value}</p>
-            <div
-              className={cn(
-                'flex items-center gap-1 text-sm',
-                kpi.trend === 'up' ? 'text-success' : 'text-destructive'
-              )}
-            >
-              {kpi.trend === 'up' ? (
-                <TrendingUp className="h-4 w-4" />
-              ) : (
-                <TrendingDown className="h-4 w-4" />
-              )}
-              <span>
-                {kpi.change > 0 ? '+' : ''}
-                {kpi.change}%
-              </span>
-              <span className="text-muted-foreground">vs last period</span>
-            </div>
-          </Card>
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        {kpiCards.map((kpi) => {
+          const up = kpi.change >= 0;
+          return (
+            <Card key={kpi.title} className="p-5">
+              <p className="text-sm text-muted-foreground mb-1">{kpi.title}</p>
+              <p className="text-2xl font-bold mb-2">{kpi.value}</p>
+              <div className={cn('flex items-center gap-1 text-xs', up ? 'text-emerald-600' : 'text-red-600')}>
+                {up ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+                <span>{up ? '+' : ''}{kpi.change.toFixed(1)}%</span>
+                <span className="text-muted-foreground">vs previous period</span>
+              </div>
+            </Card>
+          );
+        })}
       </div>
 
-      {/* Charts Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="sales">Sales</TabsTrigger>
-          <TabsTrigger value="queries">Query Stats</TabsTrigger>
+          <TabsTrigger value="commercial">Commercial</TabsTrigger>
+          <TabsTrigger value="operations">Operations</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Revenue Trend */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <Card className="p-6">
               <h3 className="font-semibold mb-4">Revenue Trend</h3>
-              <div className="h-[300px]">
+              <div className="h-[320px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={salesData}>
+                  <AreaChart data={analytics.charts.sales_trend}>
                     <defs>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#2563eb" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="#2563eb" stopOpacity={0.02} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="month" className="text-xs" />
-                    <YAxis className="text-xs" />
+                    <XAxis dataKey="day" tickFormatter={compactDateLabel} className="text-xs" />
+                    <YAxis className="text-xs" tickFormatter={(v) => `${Math.round(v / 1000)}K`} />
                     <Tooltip
+                      labelFormatter={(v) => compactDateLabel(String(v))}
+                      formatter={(v: number) => formatCurrency(v)}
                       contentStyle={{
                         backgroundColor: 'hsl(var(--card))',
                         border: '1px solid hsl(var(--border))',
                         borderRadius: '8px',
                       }}
                     />
-                    <Area
-                      type="monotone"
-                      dataKey="revenue"
-                      stroke="hsl(var(--primary))"
-                      fillOpacity={1}
-                      fill="url(#colorRevenue)"
-                    />
+                    <Area type="monotone" dataKey="revenue" stroke="#2563eb" fill="url(#revenueFill)" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             </Card>
 
-            {/* Category Distribution */}
             <Card className="p-6">
-              <h3 className="font-semibold mb-4">Sales by Category</h3>
-              <div className="h-[300px]">
+              <h3 className="font-semibold mb-4">Category Revenue Mix</h3>
+              <div className="h-[320px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
+                      data={analytics.charts.category_mix}
+                      dataKey="revenue"
+                      nameKey="category"
+                      innerRadius={65}
+                      outerRadius={108}
                       paddingAngle={2}
-                      dataKey="value"
                     >
-                      {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      {analytics.charts.category_mix.map((entry, index) => (
+                        <Cell key={`${entry.category}-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                      }}
-                    />
+                    <Tooltip formatter={(v: number) => formatCurrency(v)} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
@@ -206,81 +311,106 @@ export default function AnalyticsPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="sales" className="space-y-4">
-          <Card className="p-6">
-            <h3 className="font-semibold mb-4">Sales vs Target</h3>
-            <div className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={salesData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="month" className="text-xs" />
-                  <YAxis className="text-xs" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Legend />
-                  <Bar dataKey="sales" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="target" fill="hsl(var(--muted))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="queries" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TabsContent value="commercial" className="space-y-4">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <Card className="p-6">
-              <h3 className="font-semibold mb-4">Daily Queries</h3>
-              <div className="h-[300px]">
+              <h3 className="font-semibold mb-4">Orders Trend</h3>
+              <div className="h-[320px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={queryMetrics}>
+                  <BarChart data={analytics.charts.sales_trend}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="day" className="text-xs" />
+                    <XAxis dataKey="day" tickFormatter={compactDateLabel} className="text-xs" />
                     <YAxis className="text-xs" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                      }}
-                    />
-                    <Bar dataKey="queries" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    <Tooltip labelFormatter={(v) => compactDateLabel(String(v))} />
+                    <Bar dataKey="orders" fill="#0ea5e9" radius={[5, 5, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </Card>
 
             <Card className="p-6">
-              <h3 className="font-semibold mb-4">Avg Response Time</h3>
-              <div className="h-[300px]">
+              <h3 className="font-semibold mb-4">Top Products by Revenue</h3>
+              <div className="h-[320px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={queryMetrics}>
+                  <BarChart data={analytics.charts.top_products} layout="vertical" margin={{ left: 20, right: 10 }}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="day" className="text-xs" />
-                    <YAxis className="text-xs" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="avgTime"
-                      stroke="hsl(var(--chart-2))"
-                      strokeWidth={2}
-                      dot={{ fill: 'hsl(var(--chart-2))' }}
-                    />
-                  </LineChart>
+                    <XAxis type="number" className="text-xs" />
+                    <YAxis type="category" dataKey="product_name" width={150} className="text-xs" />
+                    <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                    <Bar dataKey="revenue" fill="#10b981" radius={[0, 5, 5, 0]} />
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="operations" className="space-y-4">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <Card className="p-6">
+              <h3 className="font-semibold mb-4">Attendance Trend</h3>
+              <div className="h-[320px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={analytics.charts.attendance_trend}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis dataKey="day" tickFormatter={compactDateLabel} className="text-xs" />
+                    <YAxis className="text-xs" domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                    <Tooltip formatter={(v: number) => `${v.toFixed(1)}%`} labelFormatter={(v) => compactDateLabel(String(v))} />
+                    <Line type="monotone" dataKey="attendance_rate" stroke="#a855f7" strokeWidth={2.2} dot={{ fill: '#a855f7' }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <h3 className="font-semibold mb-4">Department Productivity</h3>
+              <div className="h-[320px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analytics.charts.department_productivity}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis dataKey="department" className="text-xs" />
+                    <YAxis className="text-xs" tickFormatter={(v) => `${v}%`} />
+                    <Tooltip formatter={(v: number) => `${v.toFixed(1)}%`} />
+                    <Legend />
+                    <Bar dataKey="completion_rate" name="Completion Rate" fill="#f59e0b" radius={[5, 5, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          </div>
+
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              <h3 className="font-semibold">Low Stock Risk List</h3>
+            </div>
+            {analytics.alerts.low_stock_items.length ? (
+              <div className="overflow-auto rounded-xl border border-border">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/60">
+                    <tr>
+                      <th className="px-4 py-2 text-left">Material</th>
+                      <th className="px-4 py-2 text-left">Current Stock</th>
+                      <th className="px-4 py-2 text-left">Reorder Level</th>
+                      <th className="px-4 py-2 text-left">Deficit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {analytics.alerts.low_stock_items.map((item) => (
+                      <tr key={item.material_name} className="border-t border-border">
+                        <td className="px-4 py-2">{item.material_name}</td>
+                        <td className="px-4 py-2">{item.current_stock}</td>
+                        <td className="px-4 py-2">{item.reorder_level}</td>
+                        <td className="px-4 py-2 font-semibold text-red-600">{item.deficit}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No low-stock alerts for this period.</p>
+            )}
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

@@ -85,7 +85,7 @@ export const useQueryStore = create<QueryState>()(
 
       executeQuery: async () => {
         const { currentQuery, selectedDatabase } = get();
-        const { token } = useAuthStore.getState();
+        const { token, user } = useAuthStore.getState();
         if (!currentQuery.trim()) return;
 
       set({ isLoading: true, loadingStep: 0, error: null, results: null });
@@ -108,7 +108,7 @@ export const useQueryStore = create<QueryState>()(
             method: 'POST',
             headers,
             body: JSON.stringify({
-              user_id: '1', // TODO: get from auth store
+              user_id: String(user?.user_id ?? 1),
               session_id: crypto.randomUUID(),
               query: currentQuery,
               database: selectedDatabase,

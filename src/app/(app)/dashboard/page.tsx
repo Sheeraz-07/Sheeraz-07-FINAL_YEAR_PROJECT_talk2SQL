@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from 'react';
 import {
   TrendingUp,
   Users,
@@ -16,6 +17,10 @@ import { ShortcutsGrid } from '@/components/dashboard/ShortcutsGrid';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import Link from 'next/link';
+import { useQueryStore } from '@/stores/queryStore';
+import { useAuthStore } from '@/stores/authStore';
+import type { Insight } from '@/types';
 
 const mockStats = {
   totalQueries: 1234,
@@ -30,35 +35,29 @@ const mockStats = {
   todaySales: 485000,
 };
 
-const mockInsights = [
-  {
-    id: '1',
-    title: 'Sales Increased',
-    description: 'Sales revenue increased by 23% compared to last week. Top sellers: Dress Shirts, Kurtas.',
-    trend: 'up' as const,
-    value: '+PKR 234,500',
-  },
-  {
-    id: '2',
-    title: 'Low Stock Alert',
-    description: '5 raw materials are below reorder level: Cotton Fabric, Metal Buttons, Silk Thread.',
-    trend: 'alert' as const,
-  },
-  {
-    id: '3',
-    title: 'Production On Track',
-    description: '3 production orders completed today. 8 orders in progress.',
-    trend: 'up' as const,
-    value: '85% efficiency',
-  },
-  {
-    id: '4',
-    title: 'Attendance Today',
-    description: '228 employees present, 5 on leave, 2 absent.',
-    trend: 'neutral' as const,
-    value: '97% rate',
-  },
-];
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+interface KPIValue {
+  value: number;
+  change_pct: number;
+}
+
+interface AnalyticsSnapshot {
+  kpis: {
+    total_revenue: KPIValue;
+    total_orders: KPIValue;
+    avg_order_value: KPIValue;
+    fulfillment_rate: KPIValue;
+    attendance_rate: KPIValue;
+    low_stock_items: KPIValue;
+  };
+  charts: {
+    top_products: Array<{ product_name: string; revenue: number }>;
+  };
+  alerts: {
+    low_stock_items: Array<{ material_name: string; deficit: number }>;
+  };
+}
 
 const salesChartData = [
   { name: 'Mon', mens: 145000, womens: 98000, kids: 45000 },
@@ -71,12 +70,151 @@ const salesChartData = [
 ];
 
 export default function DashboardPage() {
+  const selectedDatabase = useQueryStore((state) => state.selectedDatabase);
+  const token = useAuthStore((state) => state.token);
+  const [analytics, setAnalytics] = useState<AnalyticsSnapshot | null>(null);
+  const [insightsFetchFailed, setInsightsFetchFailed] = useState(false);
+
   const currentDate = new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
     year: 'numeric', 
     month: 'long', 
     day: 'numeric' 
   });
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchInsightsData = async () => {
+      try {
+        const params = new URLSearchParams({
+          range_days: '30',
+          database: selectedDatabase,
+        });
+
+        const response = await fetch(`${API_BASE}/api/analytics?${params.toString()}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          setInsightsFetchFailed(true);
+          return;
+        }
+
+        const payload = (await response.json()) as AnalyticsSnapshot;
+        setAnalytics(payload);
+        setInsightsFetchFailed(false);
+      } catch {
+        setInsightsFetchFailed(true);
+      }
+    };
+
+    fetchInsightsData();
+    return () => controller.abort();
+  }, [selectedDatabase, token]);
+
+  const liveInsights = useMemo<Insight[]>(() => {
+    if (insightsFetchFailed) {
+      return [
+        {
+          id: 'insights-fetch-failed',
+          title: 'Insights Temporarily Unavailable',
+          description: 'Could not load live insights right now. Please refresh the page or try again shortly.',
+          trend: 'alert',
+        },
+      ];
+    }
+
+    if (!analytics) {
+      return [];
+    }
+
+    const insights: Insight[] = [];
+    const revenueChange = analytics.kpis.total_revenue.change_pct;
+    const ordersChange = analytics.kpis.total_orders.change_pct;
+    const fulfillmentRate = analytics.kpis.fulfillment_rate.value;
+    const attendanceRate = analytics.kpis.attendance_rate.value;
+    const lowStockCount = analytics.kpis.low_stock_items.value;
+
+    if (revenueChange >= 0) {
+      insights.push({
+        id: 'revenue-growth',
+        title: 'Revenue Momentum',
+        description: `Revenue is up ${revenueChange.toFixed(1)}% vs previous period. Consider scaling best-performing SKUs and channels.`,
+        trend: 'up',
+        value: `PKR ${analytics.kpis.total_revenue.value.toLocaleString()}`,
+      });
+    } else {
+      insights.push({
+        id: 'revenue-decline',
+        title: 'Revenue Decline Warning',
+        description: `Revenue is down ${Math.abs(revenueChange).toFixed(1)}% vs previous period. Review pricing, campaign mix, and demand drop by category.`,
+        trend: 'down',
+        value: `PKR ${analytics.kpis.total_revenue.value.toLocaleString()}`,
+      });
+    }
+
+    if (ordersChange >= 0) {
+      insights.push({
+        id: 'orders-trend-up',
+        title: 'Order Volume Trend',
+        description: `Order volume increased by ${ordersChange.toFixed(1)}%. Verify fulfillment capacity keeps pace to avoid service bottlenecks.`,
+        trend: 'up',
+        value: analytics.kpis.total_orders.value.toLocaleString(),
+      });
+    } else {
+      insights.push({
+        id: 'orders-trend-down',
+        title: 'Order Volume Softening',
+        description: `Order volume decreased by ${Math.abs(ordersChange).toFixed(1)}%. Investigate demand drivers and product/category performance.`,
+        trend: 'down',
+        value: analytics.kpis.total_orders.value.toLocaleString(),
+      });
+    }
+
+    if (lowStockCount > 0) {
+      const materialList = analytics.alerts.low_stock_items
+        .slice(0, 3)
+        .map((item) => item.material_name)
+        .join(', ');
+
+      insights.push({
+        id: 'low-stock-alert',
+        title: 'Inventory Risk Alert',
+        description: `${lowStockCount} material(s) are below reorder level${materialList ? `, including ${materialList}` : ''}. Prioritize replenishment planning.`,
+        trend: 'alert',
+      });
+    } else {
+      insights.push({
+        id: 'inventory-stable',
+        title: 'Inventory Health Stable',
+        description: 'No materials are currently below reorder level in the selected database snapshot.',
+        trend: 'neutral',
+      });
+    }
+
+    insights.push({
+      id: 'ops-health',
+      title: 'Operations Health Check',
+      description: `Fulfillment is at ${fulfillmentRate.toFixed(1)}% and attendance at ${attendanceRate.toFixed(1)}%. Focus on process gaps if either KPI drops below target.`,
+      trend: fulfillmentRate >= 80 && attendanceRate >= 90 ? 'up' : 'neutral',
+      value: `${fulfillmentRate.toFixed(1)}% / ${attendanceRate.toFixed(1)}%`,
+    });
+
+    const topProduct = analytics.charts.top_products[0];
+    if (topProduct) {
+      insights.push({
+        id: 'top-product',
+        title: 'Top Product Driver',
+        description: `${topProduct.product_name} is currently the top revenue contributor. Use it as a benchmark for assortment and promotions.`,
+        trend: 'neutral',
+        value: `PKR ${Math.round(topProduct.revenue).toLocaleString()}`,
+      });
+    }
+
+    return insights.slice(0, 5);
+  }, [analytics]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/20">
@@ -90,9 +228,11 @@ export default function DashboardPage() {
             {currentDate}
           </p>
         </div>
-        <Button className="rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 px-6 py-6 text-white border-0 hover:scale-105">
-          <ArrowUpRight className="h-4 w-4 mr-2" />
-          View Reports
+        <Button asChild className="rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 px-6 py-6 text-white border-0 hover:scale-105">
+          <Link href="/reports">
+            <ArrowUpRight className="h-4 w-4 mr-2" />
+            View Reports
+          </Link>
         </Button>
       </div>
 
@@ -180,7 +320,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Insights Panel */}
-      <InsightsPanel insights={mockInsights} />
+      <InsightsPanel insights={liveInsights} />
     </div>
     </div>
   );
