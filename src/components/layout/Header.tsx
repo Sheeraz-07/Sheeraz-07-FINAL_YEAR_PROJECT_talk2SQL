@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bell, Search, Moon, Sun, Menu, Sparkles, LogOut, User, ChevronDown } from 'lucide-react';
+import { Bell, Search, Moon, Sun, Menu, Sparkles, LogOut, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -13,20 +13,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
+import { canAccessAdmin } from '@/lib/rbac';
+import { createClient } from '@/lib/supabase/client';
+import type { Notification } from '@/types';
 import {
   LayoutDashboard,
   MessageSquare,
@@ -61,33 +56,6 @@ const adminNavItems = [
   { icon: Activity, label: 'Logs', path: '/admin/logs', desc: 'Activity logs' },
 ];
 
-const notifications = [
-  { 
-    id: 1, 
-    title: 'Query completed', 
-    message: 'Your sales report is ready', 
-    time: '2 min ago',
-    isRead: false,
-    type: 'success'
-  },
-  { 
-    id: 2, 
-    title: 'New insight', 
-    message: 'Sales increased 23% this week', 
-    time: '1 hour ago',
-    isRead: false,
-    type: 'info'
-  },
-  { 
-    id: 3, 
-    title: 'Database connected', 
-    message: 'Production DB is now online', 
-    time: '3 hours ago',
-    isRead: true,
-    type: 'success'
-  },
-];
-
 export function Header({ title, onMobileMenuClick }: HeaderProps) {
   const { theme, setTheme } = useTheme();
   const [searchFocused, setSearchFocused] = useState(false);
@@ -95,10 +63,50 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuthStore();
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const userCanAccessAdmin = canAccessAdmin(user?.role);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const loadNotifications = useCallback(async () => {
+    const response = await fetch('/api/notifications?page=1&pageSize=5', { cache: 'no-store' });
+    if (!response.ok) return;
+    const json = await response.json();
+    setNotifications(json.items || []);
+    setUnreadCount(json.unreadCount || 0);
+  }, []);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      void loadNotifications();
+    });
+    const supabase = createClient();
+    const channel = supabase
+      .channel('notifications-live')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'notifications' },
+        () => {
+          loadNotifications().catch(() => undefined);
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loadNotifications]);
+
+  const markRead = async (id: string) => {
+    await fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    await loadNotifications();
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl shadow-sm supports-[backdrop-filter]:bg-white/60 supports-[backdrop-filter]:dark:bg-slate-900/60">
+      <span className="sr-only">{title}</span>
       <div className="container flex h-16 items-center px-4 lg:px-6 max-w-full">
         {/* Logo & Brand */}
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -139,7 +147,7 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
             })}
 
             {/* Admin Dropdown */}
-            {user?.role === 'admin' && (
+            {userCanAccessAdmin && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm text-slate-700 dark:text-slate-300 hover:text-indigo-900 dark:hover:text-indigo-200 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 hover:scale-105 hover:shadow-md transition-all duration-200">
@@ -288,22 +296,28 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
                     className={cn(
                       "flex flex-col items-start p-4 cursor-pointer transition-colors rounded-lg m-2",
                       "hover:bg-indigo-50 dark:hover:bg-indigo-900/20",
-                      !notification.isRead && "bg-indigo-50/50 dark:bg-indigo-900/10 border-l-4 border-indigo-500"
+                      !notification.is_read && "bg-indigo-50/50 dark:bg-indigo-900/10 border-l-4 border-indigo-500"
                     )}
+                    onClick={() => markRead(notification.id)}
                   >
                     <div className="flex items-start justify-between w-full mb-1">
                       <span className="font-bold text-sm">{notification.title}</span>
-                      {!notification.isRead && (
+                      {!notification.is_read && (
                         <div className="h-2 w-2 rounded-full bg-indigo-600 dark:bg-indigo-400 shadow-md" />
                       )}
                     </div>
                     <span className="text-xs text-muted-foreground font-medium">{notification.message}</span>
-                    <span className="text-xs text-muted-foreground mt-2 font-medium">{notification.time}</span>
+                    <span className="text-xs text-muted-foreground mt-2 font-medium">
+                      {new Date(notification.created_at).toLocaleString()}
+                    </span>
                   </DropdownMenuItem>
                 ))}
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="justify-center text-indigo-600 dark:text-indigo-400 font-bold hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors p-3 text-sm m-2 rounded-lg">
+              <DropdownMenuItem
+                className="justify-center text-indigo-600 dark:text-indigo-400 font-bold hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors p-3 text-sm m-2 rounded-lg"
+                onClick={() => router.push('/notifications')}
+              >
                 View all notifications
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -319,16 +333,16 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
                 <Avatar className="h-8 w-8 ring-2 ring-indigo-200 dark:ring-indigo-800">
                   <AvatarImage src={user?.avatar} />
                   <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-blue-600 text-white text-sm font-bold">
-                    {user?.name?.charAt(0) || 'U'}
+                    {user?.username?.charAt(0) || user?.name?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden lg:block font-semibold text-sm max-w-[100px] truncate">{user?.name || 'User'}</span>
+                <span className="hidden lg:block font-semibold text-sm max-w-[100px] truncate">{user?.username || user?.name || 'User'}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 rounded-xl border-slate-200 dark:border-slate-800 shadow-xl">
               <DropdownMenuLabel className="font-bold p-4">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-bold">{user?.name || 'User'}</p>
+                  <p className="text-sm font-bold">{user?.username || user?.name || 'User'}</p>
                   <p className="text-xs text-muted-foreground font-medium truncate">{user?.email || 'user@example.com'}</p>
                 </div>
               </DropdownMenuLabel>

@@ -24,18 +24,56 @@ export interface Employee {
   created_at: Date;
 }
 
+// ==================== Auth / RBAC ====================
+
+export type UserRole = 'super_admin' | 'admin' | 'user';
+export type UserStatus = 'pending' | 'approved' | 'rejected';
+export type NotificationType =
+  | 'user_signup'
+  | 'user_pending'
+  | 'user_approved'
+  | 'user_rejected'
+  | 'system'
+  | 'admin_action';
+
 export interface User {
   user_id: number;
+  auth_user_id?: string | null;
   emp_id: number | null;
   username: string;
   password_hash?: string;
-  role: 'user' | 'analyst' | 'admin';
+  role: UserRole | null;
+  status?: UserStatus;
   last_login: Date | null;
+  email: string | null;
   // Frontend-only fields
   name?: string;
-  email?: string;
   avatar?: string;
   preferredLanguage?: 'en' | 'ur';
+}
+
+export interface SignupRequest {
+  id: number | string;
+  email: string;
+  full_name: string;
+  emp_id: number | null;
+  status: 'pending' | 'approved' | 'rejected';
+  rejection_reason?: string | null;
+  created_at: Date | string;
+  processed_by?: number | string | null;
+  processed_at?: Date | string | null;
+}
+
+export interface Notification {
+  id: string;
+  recipient_id: number;
+  actor_id: number | null;
+  type: NotificationType;
+  title: string;
+  message: string;
+  metadata: Record<string, unknown>;
+  is_read: boolean;
+  created_at: string;
 }
 
 // ==================== Attendance & Leave ====================
@@ -220,15 +258,76 @@ export interface QueryHistory {
   status: 'success' | 'error';
 }
 
+export type ReportType = 'sales' | 'attendance' | 'inventory' | 'production' | 'hr_analytics' | 'financial' | 'custom';
+export type ChartType = 'bar' | 'line' | 'pie' | 'scatter' | 'area' | 'histogram' | 'stacked_bar' | 'grouped_bar';
+
+export interface ReportSection {
+  id: string;
+  title: string;
+  description: string;
+  type: 'insights' | 'chart' | 'table' | 'summary' | 'metrics' | 'visualization';
+  chartType?: ChartType;
+  chartConfig?: Record<string, unknown>;
+  data: Record<string, unknown>[];
+  columns?: string[];
+  metrics?: Array<{
+    label: string;
+    value: string | number;
+    trend?: 'up' | 'down' | 'neutral';
+    trendValue?: number;
+  }>;
+  summary?: string;
+}
+
 export interface Report {
   id: string;
   title: string;
   description?: string;
-  queryId?: string;
-  chartType?: 'bar' | 'line' | 'pie' | 'scatter';
-  createdAt: Date;
-  scheduledAt?: string;
-  status: 'draft' | 'generated' | 'scheduled';
+  reportType: ReportType;
+  templateId?: string;
+  sections: ReportSection[];
+  metadata: {
+    generatedAt: string;
+    generatedBy?: string;
+    dateRange?: { from: Date | string; to: Date | string };
+    totalPages?: number;
+    database: string;
+    suggestedLayout?: 'modern' | 'minimal';
+    summaryStats?: {
+      totalRecords: number;
+      keyMetrics: string[];
+      analysisType: string;
+    };
+  };
+  sql?: string;
+  rawData?: Record<string, unknown>[];
+  columns?: string[];
+  rowCount?: number;
+  executionTime?: number;
+  createdAt: string;
+  updatedAt?: string;
+  status: 'draft' | 'generated' | 'scheduled' | 'error';
+  error?: string;
+  tags?: string[];
+  isTemplate?: boolean;
+}
+
+export interface ReportTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: ReportType;
+  icon?: string;
+  prompt: string;
+  suggestedCharts: ChartType[];
+  sections: Array<{
+    title: string;
+    description: string;
+    type: 'insights' | 'chart' | 'table' | 'summary' | 'metrics';
+    suggestedCharts?: ChartType[];
+  }>;
+  tags: string[];
+  isBuiltIn: boolean;
 }
 
 export interface DashboardStats {

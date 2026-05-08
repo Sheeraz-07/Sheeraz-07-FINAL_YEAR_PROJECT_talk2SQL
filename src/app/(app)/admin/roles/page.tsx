@@ -1,41 +1,78 @@
-"use client";
-
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Shield, Edit } from 'lucide-react';
+import { Shield, ShieldAlert, ShieldCheck, User } from 'lucide-react';
+import { getAllUsers } from '@/app/admin/actions';
 
-const roles = [
-  { id: 'admin', name: 'Admin', users: 2, permissions: ['All access', 'Manage users', 'Manage databases'] },
-  { id: 'analyst', name: 'Analyst', users: 5, permissions: ['Query all databases', 'Create reports', 'View analytics'] },
-  { id: 'user', name: 'User', users: 12, permissions: ['Query assigned databases', 'View reports'] },
-];
+export default async function RolesPage() {
+  const users = await getAllUsers();
+  
+  const counts = {
+    super_admin: users.filter((u) => u.role === 'super_admin').length,
+    admin: users.filter((u) => u.role === 'admin').length,
+    user: users.filter((u) => u.role === 'user').length,
+  };
 
-export default function RolesPage() {
+  const roles = [
+    { 
+      id: 'super_admin', 
+      name: 'Super Admin', 
+      icon: <ShieldAlert className="h-6 w-6 text-primary" />,
+      users: counts.super_admin, 
+      permissions: ['Full platform access', 'Manage admins', 'Delete users', 'View system logs', 'Manage roles'] 
+    },
+    { 
+      id: 'admin', 
+      name: 'Admin', 
+      icon: <ShieldCheck className="h-6 w-6 text-blue-500" />,
+      users: counts.admin, 
+      permissions: ['Approve/Reject signups', 'Manage users', 'View activity logs', 'Access all databases'] 
+    },
+    { 
+      id: 'user', 
+      name: 'User', 
+      icon: <User className="h-6 w-6 text-muted-foreground" />,
+      users: counts.user, 
+      permissions: ['Read-only app access', 'Talk2SQL queries', 'View own profile', 'Limited data access'] 
+    },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-5xl mx-auto pb-12 animate-in fade-in duration-500">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Roles & Permissions</h2>
-        <Button><Plus className="h-4 w-4 mr-2" />Create Role</Button>
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Roles & Permissions</h2>
+          <p className="text-muted-foreground mt-1">Overview of system roles, active user counts, and access levels.</p>
+        </div>
       </div>
-      <div className="grid gap-4">
+      
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {roles.map((role) => (
-          <Card key={role.id} className="p-6">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-xl bg-primary/10"><Shield className="h-6 w-6 text-primary" /></div>
-                <div>
-                  <h4 className="font-semibold">{role.name}</h4>
-                  <p className="text-sm text-muted-foreground mb-2">{role.users} users</p>
-                  <div className="flex flex-wrap gap-2">
-                    {role.permissions.map((p) => (
-                      <Badge key={p} variant="secondary">{p}</Badge>
-                    ))}
-                  </div>
+          <Card key={role.id} className="relative overflow-hidden border-border shadow-sm hover:shadow-md transition-shadow">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/50 to-transparent" />
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="p-2.5 rounded-lg bg-secondary/50 border border-border/50">
+                  {role.icon}
                 </div>
+                <Badge variant="outline" className="bg-background">
+                  {role.users} active {role.users === 1 ? 'user' : 'users'}
+                </Badge>
               </div>
-              <Button variant="outline" size="sm"><Edit className="h-4 w-4 mr-2" />Edit</Button>
-            </div>
+              <CardTitle className="text-xl mt-4">{role.name}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Permissions</h4>
+                <ul className="space-y-2">
+                  {role.permissions.map((p, i) => (
+                    <li key={i} className="flex items-start text-sm">
+                      <Shield className="h-4 w-4 mr-2 text-primary/70 shrink-0 mt-0.5" />
+                      <span>{p}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </CardContent>
           </Card>
         ))}
       </div>

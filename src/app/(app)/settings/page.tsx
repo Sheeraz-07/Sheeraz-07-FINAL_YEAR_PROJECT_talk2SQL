@@ -22,10 +22,10 @@ import { toast } from 'sonner';
 import { User, Palette, Bell, Shield } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { user, updateUser } = useAuthStore();
+  const { user, token, updateUser } = useAuthStore();
   const { selectedDatabase, setDatabase } = useQueryStore();
   const { theme, setTheme } = useTheme();
-  const [name, setName] = useState(user?.name || '');
+  const [name, setName] = useState(user?.username || user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [language, setLanguage] = useState<'en' | 'ur'>(user?.preferredLanguage || 'en');
   const [notifications, setNotifications] = useState({
@@ -36,16 +36,20 @@ export default function SettingsPage() {
   });
 
   const handleSaveProfile = () => {
-    updateUser({ name, preferredLanguage: language });
+    updateUser({ name, username: name, preferredLanguage: language });
     toast.success('Profile updated successfully');
   };
 
   const handleRefreshSchema = async () => {
     try {
       const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
       const response = await fetch(`${API_BASE}/api/schema/refresh`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ database: selectedDatabase }),
       });
 
@@ -93,7 +97,7 @@ export default function SettingsPage() {
                 <Avatar className="h-20 w-20">
                   <AvatarImage src={user?.avatar} />
                   <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                    {user?.name?.charAt(0) || 'U'}
+                    {user?.username?.charAt(0) || user?.name?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div>

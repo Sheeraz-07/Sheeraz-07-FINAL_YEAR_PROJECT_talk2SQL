@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,8 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'sonner';
+import { signInAction } from '@/app/actions';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -22,34 +21,41 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const { login, isLoading, isAuthenticated } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   });
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/dashboard');
-    }
-  }, [isAuthenticated, router]);
-
   const onSubmit = async (data: LoginForm) => {
+    setIsLoading(true);
     try {
-      await login(data.email, data.password);
-      toast.success('Welcome back!');
-      router.push('/dashboard');
-    } catch {
-      toast.error('Invalid email or password');
+      const result = await signInAction(data.email, data.password);
+
+      if (result.success) {
+        toast.success('Welcome back!');
+
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 800);
+      } else {
+        if ((result as { pendingApproval?: boolean }).pendingApproval) {
+          toast.info('Your account is pending approval.');
+          setTimeout(() => {
+            window.location.href = '/waiting-approval';
+          }, 500);
+          return;
+        }
+        toast.error(result.error || 'Sign in failed');
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error('Sign in error:', error);
+      toast.error('An error occurred during sign in');
+      setIsLoading(false);
     }
   };
-
-  if (isAuthenticated) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen flex">
@@ -207,4 +213,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

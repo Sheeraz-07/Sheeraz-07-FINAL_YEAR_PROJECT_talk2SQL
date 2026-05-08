@@ -258,6 +258,22 @@ async def get_analytics(
         f"{_limit_suffix(8, selected_database)}"
     )
 
+    total_employees_sql = (
+        "SELECT COUNT(*) AS total_employees FROM employees"
+    )
+
+    production_orders_count_sql = (
+        "SELECT COUNT(*) AS total_production_orders "
+        "FROM production_orders "
+        f"WHERE {production_current_where}"
+    )
+
+    production_orders_count_prev_sql = (
+        "SELECT COUNT(*) AS total_production_orders "
+        "FROM production_orders "
+        f"WHERE {production_prev_where}"
+    )
+
     low_stock_summary_sql = (
         "SELECT COUNT(*) AS low_stock_items "
         "FROM inventory i "
@@ -292,6 +308,10 @@ async def get_analytics(
     category_mix = _serialize_rows(await _safe_query(category_mix_sql, selected_database))
     dept_productivity = _serialize_rows(await _safe_query(dept_productivity_sql, selected_database))
 
+    total_employees_result = (await _safe_query(total_employees_sql, selected_database, [{}]))[0]
+    production_orders_count = (await _safe_query(production_orders_count_sql, selected_database, [{}]))[0]
+    production_orders_count_prev = (await _safe_query(production_orders_count_prev_sql, selected_database, [{}]))[0]
+
     low_stock_summary = (await _safe_query(low_stock_summary_sql, selected_database, [{}]))[0]
     low_stock_items = _serialize_rows(await _safe_query(low_stock_detail_sql, selected_database))
 
@@ -313,6 +333,10 @@ async def get_analytics(
 
     attendance_rate = _to_number(attendance_current.get("attendance_rate"))
     prev_attendance_rate = _to_number(attendance_prev.get("attendance_rate"))
+
+    total_employees = int(_to_number(total_employees_result.get("total_employees"), default=0.0))
+    production_orders_current = int(_to_number(production_orders_count.get("total_production_orders"), default=0.0))
+    production_orders_prev = int(_to_number(production_orders_count_prev.get("total_production_orders"), default=0.0))
 
     low_stock_count = int(_to_number(low_stock_summary.get("low_stock_items"), default=0.0))
 
@@ -345,6 +369,14 @@ async def get_analytics(
             "low_stock_items": {
                 "value": low_stock_count,
                 "change_pct": 0.0,
+            },
+            "total_employees": {
+                "value": total_employees,
+                "change_pct": 0.0,
+            },
+            "total_production_orders": {
+                "value": production_orders_current,
+                "change_pct": round(_percent_change(production_orders_current, production_orders_prev), 2),
             },
         },
         "charts": {

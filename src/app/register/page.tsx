@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -11,12 +11,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'sonner';
+import { signUpAction } from '@/app/actions';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email'),
+  empId: z.string().optional(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -29,32 +30,41 @@ type RegisterForm = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const { register: registerUser, isLoading, isAuthenticated } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
   });
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/dashboard');
-    }
-  }, [isAuthenticated, router]);
-
   const onSubmit = async (data: RegisterForm) => {
+    setIsLoading(true);
     try {
-      await registerUser(data.name, data.email, data.password);
-      toast.success('Account created successfully!');
-      router.push('/dashboard');
-    } catch {
-      toast.error('Failed to create account');
+      const result = await signUpAction(
+        data.email,
+        data.password,
+        data.name,
+        data.empId ? parseInt(data.empId, 10) : undefined
+      );
+
+      if (result.success) {
+        toast.success(result.message || 'Account created successfully!');
+        setTimeout(() => {
+          router.push('/waiting-approval');
+        }, 1500);
+      } else {
+        const errorMessage = result.error || 'Failed to create account';
+        console.error('[REGISTER] Signup error:', errorMessage);
+        toast.error(errorMessage);
+      }
+    } catch (error) {
+      console.error('[REGISTER] Registration error:', error);
+      const message =
+        error instanceof Error ? error.message : 'An error occurred during registration';
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  if (isAuthenticated) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen flex">
@@ -170,6 +180,21 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="empId" className="text-sm font-semibold">Employee ID (Optional)</Label>
+                <div className="relative">
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="empId"
+                    type="text"
+                    placeholder="Enter your employee ID"
+                    className="pl-10 h-11 rounded-xl border-border/50 focus:border-accent"
+                    {...register('empId')}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">This helps us verify your employee status</p>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-semibold">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -255,4 +280,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-

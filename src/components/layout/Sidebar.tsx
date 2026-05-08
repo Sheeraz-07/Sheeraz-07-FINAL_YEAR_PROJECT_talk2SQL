@@ -11,6 +11,7 @@ import {
   BarChart3,
   Database,
   Settings,
+  Bell,
   HelpCircle,
   Users,
   Shield,
@@ -24,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { canAccessAdmin } from '@/lib/rbac';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -46,6 +48,7 @@ const adminNavItems = [
 ];
 
 const bottomNavItems = [
+  { icon: Bell, label: 'Notifications', path: '/notifications' },
   { icon: Settings, label: 'Settings', path: '/settings' },
   { icon: HelpCircle, label: 'Help', path: '/help' },
 ];
@@ -53,6 +56,7 @@ const bottomNavItems = [
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
+  const userCanAccessAdmin = canAccessAdmin(user?.role);
 
   const NavItem = ({ icon: Icon, label, path }: { icon: React.ElementType; label: string; path: string }) => {
     const isActive = pathname === path || pathname.startsWith(path + '/');
@@ -60,6 +64,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     const content = (
       <Link
         href={path}
+        onClick={() => onToggle()}
         className={cn(
           'group flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300',
           'hover:bg-sidebar-accent hover:shadow-md hover:-translate-x-1',
@@ -137,7 +142,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           ))}
 
           {/* Admin Section */}
-          {user?.role === 'admin' && (
+          {userCanAccessAdmin && (
             <>
               <div className={cn(
                 'pt-6 pb-2',
@@ -184,12 +189,12 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             <Avatar className="h-10 w-10 ring-2 ring-sidebar-border hover:ring-accent transition-all duration-300 group-hover:scale-110">
               <AvatarImage src={user?.avatar} />
               <AvatarFallback className="bg-accent text-accent-foreground text-sm font-bold">
-                {user?.name?.charAt(0) || 'U'}
+                {user?.username?.charAt(0) || user?.name?.charAt(0) || 'U'}
               </AvatarFallback>
             </Avatar>
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold truncate">{user?.name || 'User'}</p>
+                <p className="text-sm font-bold truncate">{user?.username || user?.name || 'User'}</p>
                 <p className="text-xs text-muted-foreground truncate font-medium">{user?.email || 'user@example.com'}</p>
               </div>
             )}

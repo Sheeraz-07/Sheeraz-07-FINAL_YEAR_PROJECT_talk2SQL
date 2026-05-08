@@ -1,30 +1,21 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '@/types';
+import { signOutAction } from '@/app/actions';
+import { createClient } from '@/lib/supabase/client';
 
 interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  error: string | null;
+  setUserFromServer: (user: User | null, token: string | null) => void;
+  initializeFromServer: () => Promise<void>;
   logout: () => void;
   updateUser: (user: Partial<User>) => void;
+  clearError: () => void;
 }
-
-// Mock user for demo
-const mockUser: User = {
-  user_id: 1,
-  emp_id: 1,
-  username: 'demo_user',
-  role: 'analyst',
-  last_login: new Date(),
-  // Frontend-only convenience fields
-  name: 'Demo User',
-  email: 'demo@talk2sql.com',
-  preferredLanguage: 'en',
-};
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -32,44 +23,113 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: true,
+      error: null,
 
-      login: async (email: string, _password: string) => {
-        set({ isLoading: true });
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+      setUserFromServer: (user: User | null, token: string | null) => {
         set({
-          user: { ...mockUser, email },
-          token: 'mock-jwt-token',
-          isAuthenticated: true,
+          user,
+          token,
+          isAuthenticated: !!token && !!user,
           isLoading: false,
+          error: null,
         });
       },
 
-      register: async (name: string, email: string, _password: string) => {
-        set({ isLoading: true });
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        set({
-          user: { ...mockUser, name, email },
-          token: 'mock-jwt-token',
-          isAuthenticated: true,
-          isLoading: false,
-        });
+      initializeFromServer: async () => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const supabase = createClient();
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+
+          if (session?.user) {
+            const response = await fetch('/api/auth/user', {
+              headers: { Accept: 'application/json' },
+              cache: 'no-store',
+            });
+
+            if (response.ok) {
+              const user = (await response.json()) as User | null;
+              set({
+                user,
+                token: user ? session.access_token : null,
+                isAuthenticated: !!user,
+                isLoading: false,
+                error: user ? null : 'Account is not approved',
+              });
+              return;
+            }
+
+            set({
+              user: null,
+              token: null,
+              isAuthenticated: false,
+              isLoading: false,
+              error: 'Failed to load user profile',
+            });
+            return;
+          }
+
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            isLoading: false,
+            error: null,
+          });
+        } catch (error) {
+          console.error('[authStore] Initialization error:', error);
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            isLoading: false,
+            error: 'Failed to initialize auth',
+          });
+        }
       },
 
       logout: () => {
-        set({ user: null, token: null, isAuthenticated: false });
+        signOutAction().catch((error) => {
+          console.error('[authStore] Logout error:', error);
+        });
+
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+          error: null,
+        });
       },
 
       updateUser: (updates: Partial<User>) => {
         set((state) => ({
-          user: state.user ? { ...state.user, ...updates } : null,
+          user: state.user
+            ? {
+                ...state.user,
+                ...updates,
+                username: updates.username || updates.name || state.user.username,
+                name: updates.name || updates.username || state.user.name || state.user.username,
+              }
+            : null,
         }));
+      },
+
+      clearError: () => {
+        set({ error: null });
       },
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ user: state.user, token: state.token, isAuthenticated: state.isAuthenticated }),
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 );
