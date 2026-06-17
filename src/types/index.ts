@@ -256,6 +256,7 @@ export interface QueryHistory {
   createdAt: Date;
   isFavorite: boolean;
   status: 'success' | 'error';
+  user_id?: string;
 }
 
 export type ReportType = 'sales' | 'attendance' | 'inventory' | 'production' | 'hr_analytics' | 'financial' | 'custom';
@@ -286,6 +287,7 @@ export interface Report {
   reportType: ReportType;
   templateId?: string;
   sections: ReportSection[];
+  user_id?: string;
   metadata: {
     generatedAt: string;
     generatedBy?: string;

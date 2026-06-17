@@ -33,6 +33,7 @@ export function VoiceButton({ onTranscript, language, className }: VoiceButtonPr
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
+            type="button"
             variant="outline"
             size="icon"
             className={cn('h-8 w-8 rounded-full opacity-50 cursor-not-allowed', className)}
@@ -53,6 +54,7 @@ export function VoiceButton({ onTranscript, language, className }: VoiceButtonPr
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
+            type="button"
             variant={isListening ? 'destructive' : 'outline'}
             size="icon"
             className={cn(

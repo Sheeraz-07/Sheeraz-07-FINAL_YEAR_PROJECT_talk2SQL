@@ -563,6 +563,10 @@
 /* Smooth Page Transitions handled by layout container */
 
 /* Modern Glass Morphism */
+#main-header[data-header-visible="true"] + main {
+  padding-top: 4rem;
+}
+
 .glass-card {
   background: linear-gradient(
     135deg,

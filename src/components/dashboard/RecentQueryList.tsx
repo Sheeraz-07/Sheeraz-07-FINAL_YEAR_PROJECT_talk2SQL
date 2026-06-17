@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Clock, Play, Star, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useQueryStore } from '@/stores/queryStore';
+import { useAuthStore } from '@/stores/authStore';
 
 interface RecentQueryListProps {
   className?: string;
@@ -15,7 +16,10 @@ interface RecentQueryListProps {
 export function RecentQueryList({ className, limit = 5 }: RecentQueryListProps) {
   const router = useRouter();
   const { history, toggleFavorite, setQuery } = useQueryStore();
-  const recentQueries = history.slice(0, limit);
+  const authUser = useAuthStore((state) => state.user);
+  
+  const userHistory = history.filter((q) => !q.user_id || q.user_id === String(authUser?.user_id ?? 1));
+  const recentQueries = userHistory.slice(0, limit);
 
   const handleRunQuery = (query: string) => {
     setQuery(query);

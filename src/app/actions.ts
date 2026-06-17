@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient, createServerAdminClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/auth';
 import { createNotification } from '@/lib/notifications';
 import type { User } from '@/types';
@@ -68,7 +68,7 @@ async function logAuthEvent(userId: number | undefined, action: string, details:
 }
 
 async function notifyAdminsOnSignup(email: string, fullName: string) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = createServerAdminClient();
   const { data: admins } = await supabase
     .from('users')
     .select('user_id')

@@ -32,29 +32,7 @@ import type { Insight } from "@/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-interface KPIValue {
-  value: number;
-  change_pct: number;
-}
-
-interface AnalyticsSnapshot {
-  kpis: {
-    total_revenue: KPIValue;
-    total_orders: KPIValue;
-    avg_order_value: KPIValue;
-    fulfillment_rate: KPIValue;
-    attendance_rate: KPIValue;
-    low_stock_items: KPIValue;
-    total_employees: KPIValue;
-    total_production_orders: KPIValue;
-  };
-  charts: {
-    top_products: Array<{ product_name: string; revenue: number }>;
-  };
-  alerts: {
-    low_stock_items: Array<{ material_name: string; deficit: number }>;
-  };
-}
+import { useDashboardStore } from "@/stores/dashboardStore";
 
 const salesChartData = [
   { name: "Mon", mens: 145000, womens: 98000, kids: 45000 },
@@ -69,8 +47,12 @@ const salesChartData = [
 export default function DashboardPage() {
   const selectedDatabase = useQueryStore((state) => state.selectedDatabase);
   const token = useAuthStore((state) => state.token);
-  const [analytics, setAnalytics] = useState<AnalyticsSnapshot | null>(null);
-  const [insightsFetchFailed, setInsightsFetchFailed] = useState(false);
+  const { 
+    analytics, setAnalytics, 
+    insightsFetchFailed, setInsightsFetchFailed, 
+    hasLoadedInitial, setHasLoadedInitial,
+    loadedDatabase, setLoadedDatabase
+  } = useDashboardStore();
 
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -80,6 +62,8 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
+    if (hasLoadedInitial && loadedDatabase === selectedDatabase) return;
+
     const controller = new AbortController();
 
     const fetchInsightsData = async () => {
@@ -102,9 +86,11 @@ export default function DashboardPage() {
           return;
         }
 
-        const payload = (await response.json()) as AnalyticsSnapshot;
+        const payload = await response.json();
         setAnalytics(payload);
         setInsightsFetchFailed(false);
+        setHasLoadedInitial(true);
+        setLoadedDatabase(selectedDatabase);
       } catch {
         setInsightsFetchFailed(true);
       }
@@ -112,7 +98,7 @@ export default function DashboardPage() {
 
     fetchInsightsData();
     return () => controller.abort();
-  }, [selectedDatabase, token]);
+  }, [selectedDatabase, token, hasLoadedInitial, loadedDatabase, setAnalytics, setInsightsFetchFailed, setHasLoadedInitial, setLoadedDatabase]);
 
   const liveInsights = useMemo<Insight[]>(() => {
     if (insightsFetchFailed) {

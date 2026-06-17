@@ -152,6 +152,7 @@ export function ReportGenerator({ onReportGenerated, isGenerating = false }: Rep
         description: metadata.description,
         reportType: metadata.reportType as ReportType,
         sections: sectionsWithFullTable,
+        user_id: String(authUser?.user_id ?? 1),
         metadata: {
           generatedAt: createdAt,
           database: selectedDatabase || 'supabase',

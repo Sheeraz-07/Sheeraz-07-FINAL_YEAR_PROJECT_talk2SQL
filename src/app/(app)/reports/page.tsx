@@ -68,13 +68,16 @@ export default function ReportsPage() {
 
   const filteredReports = useMemo(() => {
     return reports.filter((report) => {
+      const isOwnedByUser = !report.user_id || report.user_id === String(authUser?.user_id ?? 1);
+      if (!isOwnedByUser) return false;
+
       const matchesSearch =
         report.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (report.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
       const matchesType = selectedType === 'all' || report.reportType === selectedType;
       return matchesSearch && matchesType;
     });
-  }, [reports, searchQuery, selectedType]);
+  }, [reports, searchQuery, selectedType, authUser]);
 
   const toStoredReport = (report: Report): Report => {
     const lightweightSections = report.sections.map((section) => {

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Notification, NotificationType } from '@/types';
+import { createClient } from '@/lib/supabase/client';
 
 const types: Array<{ id: NotificationType | 'all'; label: string }> = [
   { id: 'all', label: 'All' },
@@ -44,6 +45,22 @@ export default function NotificationsPage() {
     queueMicrotask(() => {
       void loadNotifications();
     });
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel('notifications-page-live')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'notifications' },
+        () => {
+          loadNotifications().catch(() => undefined);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [loadNotifications]);
 
   const markRead = async (id: string) => {

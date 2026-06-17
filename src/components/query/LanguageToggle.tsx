@@ -11,6 +11,7 @@ export function LanguageToggle({ current, onChange, className }: LanguageToggleP
   return (
     <div className={cn('flex items-center gap-1 p-1 bg-secondary rounded-lg', className)}>
       <Button
+        type="button"
         variant={current === 'en' ? 'default' : 'ghost'}
         size="sm"
         className={cn(
@@ -22,6 +23,7 @@ export function LanguageToggle({ current, onChange, className }: LanguageToggleP
         English
       </Button>
       <Button
+        type="button"
         variant={current === 'ur' ? 'default' : 'ghost'}
         size="sm"
         className={cn(

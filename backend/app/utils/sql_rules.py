@@ -25,21 +25,19 @@ POSTGRES_SQL_RULES_BLOCK: str = """\
    - CURRENT_DATE, CURRENT_TIMESTAMP, INTERVAL, EXTRACT, DATE_TRUNC
    - NUMERIC aggregates: SUM, COUNT, AVG, MIN, MAX
 7. For text comparisons, prefer ILIKE for case-insensitive matching.
-8. Limit result sets to a maximum of 500 rows using LIMIT unless the user
-   explicitly asks for all rows.
-9. Use meaningful column aliases (AS) for computed or aggregated columns.
-10. When the user asks for "today", use CURRENT_DATE.
-    When the user asks for "this month", use DATE_TRUNC('month', CURRENT_DATE).
-    When the user asks for "this year", use DATE_TRUNC('year', CURRENT_DATE).
-11. For Supabase compatibility:
+8. Use meaningful column aliases (AS) for computed or aggregated columns.
+9. When the user asks for "today", use CURRENT_DATE.
+   When the user asks for "this month", use DATE_TRUNC('month', CURRENT_DATE).
+   When the user asks for "this year", use DATE_TRUNC('year', CURRENT_DATE).
+10. For Supabase compatibility:
     - Do NOT use schema-qualified names (no "public." prefix).
     - Do NOT use RETURNING clause (read-only).
     - Do NOT use advisory locks or NOTIFY/LISTEN.
-12. Output ONLY the raw SQL query.  No markdown fences, no backticks,
+11. Output ONLY the raw SQL query.  No markdown fences, no backticks,
     no explanations, no leading/trailing whitespace, no semicolons.
-13. If the question is ambiguous, make a reasonable assumption and
+12. If the question is ambiguous, make a reasonable assumption and
     generate the most likely intended query.
-14. For hierarchical data (manager_id in employees), use self-joins:
+13. For hierarchical data (manager_id in employees), use self-joins:
     e.g. JOIN employees m ON e.manager_id = m.emp_id
 
 === END SQL RULES ===
@@ -62,20 +60,18 @@ SQLSERVER_SQL_RULES_BLOCK: str = """\
    GETDATE(), CAST(... AS DATE), DATEADD, DATEDIFF, YEAR, MONTH.
 7. For text comparisons, prefer case-insensitive matching with LOWER(...)
    patterns if needed.
-8. Limit result sets to a maximum of 500 rows using TOP 500 unless the user
-   explicitly asks for all rows.
-9. Use meaningful column aliases (AS) for computed or aggregated columns.
-10. When the user asks for "today", use CAST(GETDATE() AS DATE).
-    For "this month", use YEAR(date_col) = YEAR(GETDATE()) AND
-    MONTH(date_col) = MONTH(GETDATE()).
-    For "this year", use YEAR(date_col) = YEAR(GETDATE()).
-11. For SQL Server compatibility:
+8. Use meaningful column aliases (AS) for computed or aggregated columns.
+9. When the user asks for "today", use CAST(GETDATE() AS DATE).
+   For "this month", use YEAR(date_col) = YEAR(GETDATE()) AND
+   MONTH(date_col) = MONTH(GETDATE()).
+   For "this year", use YEAR(date_col) = YEAR(GETDATE()).
+10. For SQL Server compatibility:
     - Use schema-qualified names when available (for example dbo.TableName).
     - Do NOT use PostgreSQL-only syntax: ILIKE, INTERVAL, DATE_TRUNC, LIMIT,
       RETURNING, :: casts.
-12. Output ONLY the raw SQL query. No markdown fences, no backticks,
+11. Output ONLY the raw SQL query. No markdown fences, no backticks,
     no explanations, no leading/trailing whitespace, no semicolons.
-13. If the question is ambiguous, make a reasonable assumption and
+12. If the question is ambiguous, make a reasonable assumption and
     generate the most likely intended query.
 
 === END SQL RULES ===

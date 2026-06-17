@@ -36,61 +36,7 @@ import { toast } from 'sonner';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 const PIE_COLORS = ['#2563eb', '#10b981', '#f59e0b', '#a855f7', '#ef4444', '#0ea5e9'];
-
-interface KPIValue {
-  value: number;
-  change_pct: number;
-}
-
-interface AnalyticsResponse {
-  request_id: string;
-  database: string;
-  range_days: number;
-  generated_at: string;
-  kpis: {
-    total_revenue: KPIValue;
-    total_orders: KPIValue;
-    avg_order_value: KPIValue;
-    fulfillment_rate: KPIValue;
-    attendance_rate: KPIValue;
-    low_stock_items: KPIValue;
-  };
-  charts: {
-    sales_trend: Array<{ day: string; revenue: number; orders: number }>;
-    attendance_trend: Array<{ day: string; attendance_rate: number }>;
-    category_mix: Array<{ category: string; revenue: number }>;
-    top_products: Array<{ product_name: string; units_sold: number; revenue: number }>;
-    department_productivity: Array<{ department: string; completed_qty: number; target_qty: number; completion_rate: number }>;
-  };
-  alerts: {
-    low_stock_items: Array<{ material_name: string; current_stock: number; reorder_level: number; deficit: number }>;
-  };
-}
-
-const EMPTY_ANALYTICS: AnalyticsResponse = {
-  request_id: '',
-  database: 'supabase',
-  range_days: 30,
-  generated_at: new Date().toISOString(),
-  kpis: {
-    total_revenue: { value: 0, change_pct: 0 },
-    total_orders: { value: 0, change_pct: 0 },
-    avg_order_value: { value: 0, change_pct: 0 },
-    fulfillment_rate: { value: 0, change_pct: 0 },
-    attendance_rate: { value: 0, change_pct: 0 },
-    low_stock_items: { value: 0, change_pct: 0 },
-  },
-  charts: {
-    sales_trend: [],
-    attendance_trend: [],
-    category_mix: [],
-    top_products: [],
-    department_productivity: [],
-  },
-  alerts: {
-    low_stock_items: [],
-  },
-};
+import { useAnalyticsStore } from '@/stores/analyticsStore';
 
 function compactDateLabel(value: string) {
   const date = new Date(value);
@@ -113,9 +59,13 @@ function formatPercent(value: number) {
 export default function AnalyticsPage() {
   const selectedDatabase = useQueryStore((state) => state.selectedDatabase);
   const token = useAuthStore((state) => state.token);
-  const [dateRange, setDateRange] = useState('30');
+  const { 
+    analytics, setAnalytics, 
+    dateRange, setDateRange, 
+    hasLoadedInitial, setHasLoadedInitial,
+    loadedDatabase, setLoadedDatabase
+  } = useAnalyticsStore();
   const [loading, setLoading] = useState(false);
-  const [analytics, setAnalytics] = useState<AnalyticsResponse>(EMPTY_ANALYTICS);
 
   const fetchAnalytics = useCallback(async () => {
     setLoading(true);
@@ -135,19 +85,22 @@ export default function AnalyticsPage() {
         throw new Error(payload?.detail || `HTTP ${response.status}`);
       }
 
-      setAnalytics(payload as AnalyticsResponse);
+      setAnalytics(payload);
+      setHasLoadedInitial(true);
+      setLoadedDatabase(selectedDatabase);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to load analytics';
       toast.error(`Analytics fetch failed: ${message}`);
-      setAnalytics(EMPTY_ANALYTICS);
     } finally {
       setLoading(false);
     }
-  }, [dateRange, selectedDatabase, token]);
+  }, [dateRange, selectedDatabase, token, setAnalytics, setHasLoadedInitial, setLoadedDatabase]);
 
   useEffect(() => {
-    fetchAnalytics();
-  }, [fetchAnalytics]);
+    if (!hasLoadedInitial || loadedDatabase !== selectedDatabase) {
+      fetchAnalytics();
+    }
+  }, [fetchAnalytics, hasLoadedInitial, loadedDatabase, selectedDatabase]);
 
   const kpiCards = useMemo(
     () => [

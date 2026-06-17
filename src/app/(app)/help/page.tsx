@@ -16,44 +16,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
   BookOpen,
-  Video,
   Search,
   Copy,
-  PlayCircle,
   HelpCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const tutorials = [
-  {
-    id: '1',
-    title: 'Getting Started with Talk2SQL',
-    description: 'Learn the basics of natural language querying',
-    duration: '5 min',
-    thumbnail: '🎬',
-  },
-  {
-    id: '2',
-    title: 'Using Voice Input',
-    description: 'Master voice commands for hands-free querying',
-    duration: '3 min',
-    thumbnail: '🎤',
-  },
-  {
-    id: '3',
-    title: 'Creating Reports',
-    description: 'Generate and schedule automated reports',
-    duration: '7 min',
-    thumbnail: '📊',
-  },
-  {
-    id: '4',
-    title: 'Advanced Query Techniques',
-    description: 'Complex queries and data analysis tips',
-    duration: '10 min',
-    thumbnail: '🚀',
-  },
-];
 
 const queryExamples = [
   {
@@ -141,12 +109,8 @@ export default function HelpPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="tutorials" className="space-y-6">
-        <TabsList className="grid grid-cols-3 max-w-lg mx-auto">
-          <TabsTrigger value="tutorials">
-            <Video className="h-4 w-4 mr-2" />
-            Tutorials
-          </TabsTrigger>
+      <Tabs defaultValue="examples" className="space-y-6">
+        <TabsList className="grid grid-cols-2 max-w-lg mx-auto">
           <TabsTrigger value="examples">
             <BookOpen className="h-4 w-4 mr-2" />
             Examples
@@ -157,35 +121,6 @@ export default function HelpPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Tutorials */}
-        <TabsContent value="tutorials">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {tutorials.map((tutorial) => (
-              <Card key={tutorial.id} className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
-                <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center text-3xl">
-                    {tutorial.thumbnail}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold">{tutorial.title}</h4>
-                      <Badge variant="secondary" className="text-xs">
-                        {tutorial.duration}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      {tutorial.description}
-                    </p>
-                    <Button variant="outline" size="sm">
-                      <PlayCircle className="h-4 w-4 mr-2" />
-                      Watch
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
 
         {/* Examples */}
         <TabsContent value="examples">

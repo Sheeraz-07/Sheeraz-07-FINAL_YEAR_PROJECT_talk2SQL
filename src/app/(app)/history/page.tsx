@@ -32,15 +32,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useQueryStore } from '@/stores/queryStore';
+import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export default function HistoryPage() {
   const router = useRouter();
-  const { history, savedQueries, toggleFavorite, deleteFromHistory, setQuery } = useQueryStore();
+  const { history: allHistory, savedQueries: allSavedQueries, toggleFavorite, deleteFromHistory, setQuery } = useQueryStore();
+  const authUser = useAuthStore((state) => state.user);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('recent');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  const history = allHistory.filter((q) => !q.user_id || q.user_id === String(authUser?.user_id ?? 1));
+  const savedQueries = allSavedQueries.filter((q) => !q.user_id || q.user_id === String(authUser?.user_id ?? 1));
 
   const filteredHistory = history.filter((query) => {
     const matchesSearch = query.naturalQuery.toLowerCase().includes(searchTerm.toLowerCase());

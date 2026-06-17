@@ -17,8 +17,9 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { useAuthStore } from '@/stores/authStore';
+import { useDashboardStore } from '@/stores/dashboardStore';
 import { canAccessAdmin } from '@/lib/rbac';
 import { createClient } from '@/lib/supabase/client';
 import type { Notification } from '@/types';
@@ -75,6 +76,25 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
     setUnreadCount(json.unreadCount || 0);
   }, []);
 
+  const [isVisible, setIsVisible] = useState(true);
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const startHideTimer = useCallback(() => {
+    if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+    hideTimeoutRef.current = setTimeout(() => {
+      setIsVisible(false);
+    }, 3000);
+  }, []);
+
+  const handleMouseEnter = () => {
+    if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+    setIsVisible(true);
+  };
+
+  const handleMouseLeave = () => {
+    startHideTimer();
+  };
+
   useEffect(() => {
     queueMicrotask(() => {
       void loadNotifications();
@@ -85,7 +105,10 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'notifications' },
-        () => {
+        (payload) => {
+          if (payload.eventType === 'INSERT' && payload.new && payload.new.recipient_id === user?.user_id) {
+            toast(payload.new.title, { description: payload.new.message });
+          }
           loadNotifications().catch(() => undefined);
         }
       )
@@ -93,7 +116,26 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [loadNotifications]);
+  }, [loadNotifications, user?.user_id]);
+
+  useEffect(() => {
+    startHideTimer();
+    
+    const handleClickOutside = (e: MouseEvent) => {
+      const headerEl = document.getElementById('main-header');
+      if (headerEl && !headerEl.contains(e.target as Node)) {
+        setIsVisible(false);
+        if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+    };
+  }, [startHideTimer]);
 
   const markRead = async (id: string) => {
     await fetch('/api/notifications', {
@@ -104,14 +146,38 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
     await loadNotifications();
   };
 
+  const markAllRead = async () => {
+    await fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ markAll: true }),
+    });
+    await loadNotifications();
+  };
+
   return (
-    <header className="sticky top-0 z-[201] w-full border-b border-divider/40 bg-background/50 backdrop-blur-2xl shadow-sm transition-all duration-300">
+    <header 
+      id="main-header"
+      data-header-visible={isVisible}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className={cn(
+        "fixed top-0 left-0 right-0 z-[201] transition-transform duration-300 ease-out border-b border-divider/40 bg-background/95 backdrop-blur-3xl shadow-md",
+        isVisible ? "translate-y-0" : "-translate-y-full"
+      )}
+    >
+      {/* Invisible hit area to trigger hover when hidden */}
+      <div className="absolute top-full left-0 right-0 h-6 bg-transparent cursor-pointer" />
       <span className="sr-only">{title}</span>
       <div className="flex h-16 items-center px-4 lg:px-6 w-full justify-between">
         {/* Left Section */}
         <div className="flex items-center gap-3">
           {/* Logo & Brand */}
-          <Link href="/dashboard" className="flex items-center gap-2 group">
+          <Link 
+            href="/dashboard" 
+            className="flex items-center gap-2 group"
+            onClick={() => useDashboardStore.getState().setHasLoadedInitial(false)}
+          >
             <div className="relative">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 flex items-center justify-center hover:shadow-lg transition-all duration-200 hover:scale-105 shadow-md">
                 <Sparkles className="h-5 w-5 text-white" />
@@ -284,9 +350,18 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
               <DropdownMenuLabel className="flex items-center justify-between py-3 px-4">
                 <span className="font-bold text-base">Notifications</span>
                 {unreadCount > 0 && (
-                  <Badge variant="secondary" className="rounded-full text-xs font-bold px-3 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-900 dark:text-indigo-200">
-                    {unreadCount} new
-                  </Badge>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 px-2"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      markAllRead();
+                    }}
+                  >
+                    Mark all read
+                  </Button>
                 )}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -299,7 +374,12 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
                       "hover:bg-indigo-50 dark:hover:bg-indigo-900/20",
                       !notification.is_read && "bg-indigo-50/50 dark:bg-indigo-900/10 border-l-4 border-indigo-500"
                     )}
-                    onClick={() => markRead(notification.id)}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      if (!notification.is_read) {
+                        markRead(notification.id);
+                      }
+                    }}
                   >
                     <div className="flex items-start justify-between w-full mb-1">
                       <span className="font-bold text-sm">{notification.title}</span>
@@ -316,8 +396,8 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="justify-center text-indigo-600 dark:text-indigo-400 font-bold hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors p-3 text-sm m-2 rounded-lg"
-                onClick={() => router.push('/notifications')}
+                className="justify-center text-indigo-600 dark:text-indigo-400 font-bold hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors p-3 text-sm m-2 rounded-lg cursor-pointer"
+                onSelect={() => router.push('/notifications')}
               >
                 View all notifications
               </DropdownMenuItem>

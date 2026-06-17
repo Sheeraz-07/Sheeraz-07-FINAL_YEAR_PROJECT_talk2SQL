@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient, createServerAdminClient } from '@/lib/supabase/server';
 import type { Notification, NotificationType } from '@/types';
 
 type NotificationInsert = {
@@ -11,7 +11,7 @@ type NotificationInsert = {
 };
 
 export async function createNotification(payload: NotificationInsert) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = createServerAdminClient();
   const { error } = await supabase.from('notifications').insert({
     recipient_id: payload.recipient_id,
     actor_id: payload.actor_id ?? null,

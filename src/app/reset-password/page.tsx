@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
 
 const resetPasswordSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
@@ -24,8 +26,6 @@ type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
 
 export default function ResetPasswordPage() {
   const router = useRouter();
-  const params = useParams();
-  const token = params?.token as string;
   
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,23 +35,22 @@ export default function ResetPasswordPage() {
     resolver: zodResolver(resetPasswordSchema),
   });
 
-  // Redirect if no token
-  useEffect(() => {
-    if (!token) {
-      router.push('/login');
-    }
-  }, [token, router]);
-
-  if (!token) {
-    return null;
-  }
-
   const onSubmit = async (data: ResetPasswordForm) => {
     setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    setIsSuccess(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({ password: data.password });
+
+      if (error) throw error;
+      
+      setIsSuccess(true);
+      toast.success('Password reset successfully');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to reset password';
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

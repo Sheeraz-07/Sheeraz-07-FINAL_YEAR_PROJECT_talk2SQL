@@ -218,30 +218,57 @@ async def get_analytics(
         f"ORDER BY {attendance_day}"
     )
 
-    top_products_sql = (
-        "SELECT "
-        f"{_limit_prefix(8, selected_database)}"
-        "p.product_name AS product_name, "
-        "SUM(so.quantity) AS units_sold, "
-        "COALESCE(SUM(so.total_amount), 0) AS revenue "
-        "FROM sales_orders so "
-        "JOIN products p ON p.product_id = so.product_id "
-        f"WHERE {sales_current_where} "
-        "GROUP BY p.product_name "
-        "ORDER BY revenue DESC"
-        f"{_limit_suffix(8, selected_database)}"
-    )
+    products_table = "furniture_products" if selected_database == "sql_server" else "products"
+    inventory_table = "material_inventory" if selected_database == "sql_server" else "inventory"
 
-    category_mix_sql = (
-        "SELECT "
-        "COALESCE(p.category, 'Uncategorized') AS category, "
-        "COALESCE(SUM(so.total_amount), 0) AS revenue "
-        "FROM sales_orders so "
-        "JOIN products p ON p.product_id = so.product_id "
-        f"WHERE {sales_current_where} "
-        "GROUP BY p.category "
-        "ORDER BY revenue DESC"
-    )
+    if selected_database == "sql_server":
+        top_products_sql = (
+            "SELECT TOP 8 "
+            "p.product_name AS product_name, "
+            "SUM(sod.quantity) AS units_sold, "
+            "COALESCE(SUM(sod.line_total), 0) AS revenue "
+            "FROM sales_orders so "
+            "JOIN sales_order_details sod ON so.sale_id = sod.sale_id "
+            f"JOIN {products_table} p ON p.product_id = sod.product_id "
+            f"WHERE {sales_current_where} "
+            "GROUP BY p.product_name "
+            "ORDER BY revenue DESC"
+        )
+        
+        category_mix_sql = (
+            "SELECT "
+            "COALESCE(p.category, 'Uncategorized') AS category, "
+            "COALESCE(SUM(sod.line_total), 0) AS revenue "
+            "FROM sales_orders so "
+            "JOIN sales_order_details sod ON so.sale_id = sod.sale_id "
+            f"JOIN {products_table} p ON p.product_id = sod.product_id "
+            f"WHERE {sales_current_where} "
+            "GROUP BY COALESCE(p.category, 'Uncategorized') "
+            "ORDER BY revenue DESC"
+        )
+    else:
+        top_products_sql = (
+            "SELECT "
+            "p.product_name AS product_name, "
+            "SUM(so.quantity) AS units_sold, "
+            "COALESCE(SUM(so.total_amount), 0) AS revenue "
+            "FROM sales_orders so "
+            f"JOIN {products_table} p ON p.product_id = so.product_id "
+            f"WHERE {sales_current_where} "
+            "GROUP BY p.product_name "
+            "ORDER BY revenue DESC LIMIT 8"
+        )
+
+        category_mix_sql = (
+            "SELECT "
+            "COALESCE(p.category, 'Uncategorized') AS category, "
+            "COALESCE(SUM(so.total_amount), 0) AS revenue "
+            "FROM sales_orders so "
+            f"JOIN {products_table} p ON p.product_id = so.product_id "
+            f"WHERE {sales_current_where} "
+            "GROUP BY COALESCE(p.category, 'Uncategorized') "
+            "ORDER BY revenue DESC"
+        )
 
     dept_productivity_sql = (
         "SELECT "
@@ -276,7 +303,7 @@ async def get_analytics(
 
     low_stock_summary_sql = (
         "SELECT COUNT(*) AS low_stock_items "
-        "FROM inventory i "
+        f"FROM {inventory_table} i "
         "JOIN raw_materials rm ON rm.material_id = i.material_id "
         "WHERE i.quantity < rm.reorder_level"
     )
@@ -288,7 +315,7 @@ async def get_analytics(
         "i.quantity AS current_stock, "
         "rm.reorder_level, "
         "(rm.reorder_level - i.quantity) AS deficit "
-        "FROM inventory i "
+        f"FROM {inventory_table} i "
         "JOIN raw_materials rm ON rm.material_id = i.material_id "
         "WHERE i.quantity < rm.reorder_level "
         "ORDER BY deficit DESC"

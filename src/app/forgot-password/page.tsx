@@ -11,6 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
+import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
+
 const forgotPasswordSchema = z.object({
   email: z.string().email('Please enter a valid email'),
 });
@@ -27,10 +30,21 @@ export default function ForgotPasswordPage() {
 
   const onSubmit = async (data: ForgotPasswordForm) => {
     setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    setIsSubmitted(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+      
+      setIsSubmitted(true);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to send reset email';
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
