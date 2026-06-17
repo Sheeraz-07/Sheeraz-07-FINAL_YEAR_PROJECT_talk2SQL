@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/auth';
 import { createNotification } from '@/lib/notifications';
 import type { User } from '@/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 type UserProfileRow = {
   user_id: number;
@@ -17,7 +18,7 @@ type UserProfileRow = {
   last_login: string | null;
 };
 
-async function fetchUserProfileByEmail(supabase: any, email: string, accessToken?: string) {
+async function fetchUserProfileByEmail(supabase: SupabaseClient, email: string, accessToken?: string) {
   let query = supabase
     .from('users')
     .select('user_id, emp_id, username, role, email, last_login, auth_user_id, status')
@@ -238,7 +239,13 @@ export async function signInAction(email: string, password: string) {
     return { success: true, user, pendingApproval: false };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Sign in failed';
-    return { success: false, error: message };
+    const connectionMessage =
+      message.includes('fetch failed') ||
+      message.includes('ENOTFOUND') ||
+      message.includes('ConnectTimeoutError')
+        ? 'Unable to connect to Supabase. Check your network or Supabase project URL.'
+        : message;
+    return { success: false, error: connectionMessage };
   }
 }
 

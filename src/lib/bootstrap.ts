@@ -1,11 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
 export async function ensureSuperAdminSeeded() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const seedEmail = process.env.SUPER_ADMIN_EMAIL;
-  const seedPassword = process.env.SUPER_ADMIN_PASSWORD;
-  const seedName = process.env.SUPER_ADMIN_NAME || 'Super Admin';
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const serviceRoleKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+  const seedEmail = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAIL;
+  const seedPassword = process.env.NEXT_PUBLIC_SUPER_ADMIN_PASSWORD;
+  const seedName = process.env.NEXT_PUBLIC_SUPER_ADMIN_NAME || 'Super Admin';
 
   if (!url || !serviceRoleKey || !seedEmail || !seedPassword) {
     return;

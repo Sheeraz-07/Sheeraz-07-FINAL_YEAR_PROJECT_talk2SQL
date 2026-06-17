@@ -219,12 +219,12 @@ export default function DashboardPage() {
   }, [analytics]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/20">
+    <div className="min-h-screen bg-transparent">
       <div className="space-y-8 p-8 animate-fade-in max-w-[1600px] mx-auto">
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold tracking-tight text-foreground">
               Dashboard Overview
             </h1>
             <p className="text-muted-foreground mt-2 flex items-center gap-2 font-medium">
@@ -244,7 +244,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 justify-items-center max-w-[1600px] mx-auto">
           <MetricCard
             title="Total Revenue"
             value={
@@ -315,23 +315,26 @@ export default function DashboardPage() {
         <ShortcutsGrid />
 
         {/* Charts and Recent Queries Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sales by Category Chart */}
-          <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl overflow-hidden">
+          <Card className="col-span-1 lg:col-span-2 shadow-premium hover:shadow-premium-hover transition-all duration-300 rounded-2xl overflow-hidden h-[315px] animate-slide-up" style={{ animationDelay: '0.1s' }}>
             <CardHeader className="flex flex-row items-center justify-between pb-2 bg-gradient-to-r from-transparent to-indigo-50/50 dark:to-indigo-950/30">
-              <CardTitle className="text-xl font-bold">
+              <CardTitle className="text-lg font-bold">
                 Weekly Sales by Category
               </CardTitle>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-sm rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/50 font-semibold"
+                className="text-xs rounded-full font-semibold"
+                asChild
               >
-                View Details
+                <Link href="/analytics">
+                  View Details
+                </Link>
               </Button>
             </CardHeader>
-            <CardContent className="pt-6">
-              <div className="h-[320px]">
+            <CardContent className="pt-4">
+              <div className="h-[210px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={salesChartData}>
                     <CartesianGrid
@@ -340,11 +343,11 @@ export default function DashboardPage() {
                     />
                     <XAxis
                       dataKey="name"
-                      className="text-xs"
+                      className="text-[0.65rem]"
                       stroke="hsl(var(--muted-foreground))"
                     />
                     <YAxis
-                      className="text-xs"
+                      className="text-[0.65rem]"
                       tickFormatter={(value) => `${value / 1000}K`}
                       stroke="hsl(var(--muted-foreground))"
                     />
@@ -385,7 +388,9 @@ export default function DashboardPage() {
           </Card>
 
           {/* Recent Queries */}
-          <RecentQueryList />
+          <div className="col-span-1 lg:col-span-2 h-[315px] animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <RecentQueryList className="h-full" />
+          </div>
         </div>
 
         {/* Insights Panel */}

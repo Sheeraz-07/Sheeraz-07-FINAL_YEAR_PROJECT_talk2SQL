@@ -17,7 +17,6 @@ import { signUpAction } from '@/app/actions';
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email'),
-  empId: z.string().optional(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -42,8 +41,7 @@ export default function RegisterPage() {
       const result = await signUpAction(
         data.email,
         data.password,
-        data.name,
-        data.empId ? parseInt(data.empId, 10) : undefined
+        data.name
       );
 
       if (result.success) {
@@ -67,55 +65,49 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-auth-mesh relative overflow-hidden">
       {/* Left Section - Branding */}
-      <div className="hidden lg:flex flex-1 bg-gradient-dark items-center justify-center p-12 relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-accent rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-accent rounded-full blur-3xl" />
-        </div>
-
-        <div className="relative z-10 max-w-lg text-white space-y-8">
+      <div className="hidden lg:flex flex-1 items-center justify-center p-12 relative z-10">
+        <div className="relative z-10 max-w-lg auth-glass-panel p-10 rounded-3xl text-foreground space-y-8">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold">
               <ShieldCheck className="h-4 w-4" />
               Secure & Reliable Platform
             </div>
-            <h2 className="text-4xl font-bold leading-tight">
+            <h2 className="text-4xl font-bold leading-tight tracking-tight">
               Join the future of database querying
             </h2>
-            <p className="text-lg text-white/80">
+            <p className="text-lg text-muted-foreground font-medium">
               Create your account and start making SQL queries using natural language. Simple, fast, and powerful.
             </p>
           </div>
 
           <div className="space-y-4 pt-8">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold">
                 ✓
               </div>
               <div>
-                <div className="font-semibold">Natural Language Processing</div>
-                <div className="text-sm text-white/70">Convert plain English to SQL instantly</div>
+                <div className="font-semibold text-foreground">Natural Language Processing</div>
+                <div className="text-sm font-medium text-muted-foreground">Convert plain English to SQL instantly</div>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold">
                 ✓
               </div>
               <div>
-                <div className="font-semibold">Enterprise Security</div>
-                <div className="text-sm text-white/70">Bank-level encryption for your data</div>
+                <div className="font-semibold text-foreground">Enterprise Security</div>
+                <div className="text-sm font-medium text-muted-foreground">Bank-level encryption for your data</div>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold">
                 ✓
               </div>
               <div>
-                <div className="font-semibold">Real-time Results</div>
-                <div className="text-sm text-white/70">Get insights in milliseconds</div>
+                <div className="font-semibold text-foreground">Real-time Results</div>
+                <div className="text-sm font-medium text-muted-foreground">Get insights in milliseconds</div>
               </div>
             </div>
           </div>
@@ -123,8 +115,8 @@ export default function RegisterPage() {
       </div>
 
       {/* Right Section - Register Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-background">
-        <Card className="w-full max-w-md border-border/50 shadow-xl animate-fade-in">
+      <div className="flex-1 flex items-center justify-center p-8 relative z-10">
+        <Card className="w-full max-w-md auth-glass-panel transition-all duration-500 animate-fade-in hover:shadow-2xl">
           <CardHeader className="space-y-4 pb-6">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center">
@@ -180,21 +172,6 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="empId" className="text-sm font-semibold">Employee ID (Optional)</Label>
-                <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="empId"
-                    type="text"
-                    placeholder="Enter your employee ID"
-                    className="pl-10 h-11 rounded-xl border-border/50 focus:border-accent"
-                    {...register('empId')}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">This helps us verify your employee status</p>
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-semibold">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -209,13 +186,13 @@ export default function RegisterPage() {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 rounded-lg hover:bg-muted"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 rounded-lg text-muted-foreground hover-icon-contrast"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      <Eye className="h-4 w-4" />
                     )}
                   </Button>
                 </div>
@@ -264,15 +241,15 @@ export default function RegisterPage() {
           <CardFooter className="flex-col space-y-3 pt-6 border-t">
             <p className="text-sm text-muted-foreground text-center">
               Already have an account?{' '}
-              <Link href="/login" className="text-accent font-semibold hover:text-accent/80 transition-colors">
+              <Link href="/login" className="text-accent font-semibold hover-link-contrast">
                 Sign in
               </Link>
             </p>
             <p className="text-xs text-center text-muted-foreground">
               By creating an account, you agree to our{' '}
-              <Link href="#" className="underline hover:text-foreground">Terms</Link>
+              <Link href="#" className="underline hover-link-contrast">Terms</Link>
               {' '}and{' '}
-              <Link href="#" className="underline hover:text-foreground">Privacy Policy</Link>
+              <Link href="#" className="underline hover-link-contrast">Privacy Policy</Link>
             </p>
           </CardFooter>
         </Card>

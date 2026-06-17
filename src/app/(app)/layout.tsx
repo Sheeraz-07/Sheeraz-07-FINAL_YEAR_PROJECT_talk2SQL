@@ -57,7 +57,7 @@ export default function AppLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/20">
+    <div className="flex h-screen overflow-hidden theme-gradient-bg">
       {/* Mobile Sidebar (for small screens) */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetContent side="left" className="p-0 w-64 border-r-0">
@@ -66,14 +66,14 @@ export default function AppLayout({
         </SheetContent>
       </Sheet>
 
-      {/* Main Content - Full Width */}
-      <div className="min-h-screen">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col relative overflow-hidden">
         <Header
           title={pageTitle}
           onMobileMenuClick={() => setMobileMenuOpen(true)}
         />
-        <main className="w-full">
-          <div className="container mx-auto px-4 md:px-6 lg:px-8 py-6 max-w-[1920px]">
+        <main className="flex-1 overflow-y-auto">
+          <div className="container mx-auto px-4 md:px-6 lg:px-8 py-6 max-w-7xl">
             <div className="animate-fade-in">
               {children}
             </div>

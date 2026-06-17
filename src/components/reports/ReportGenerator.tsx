@@ -195,7 +195,7 @@ export function ReportGenerator({ onReportGenerated, isGenerating = false }: Rep
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
-          className="gap-2 rounded-full font-semibold bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 border-0 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 h-11 px-6"
+          className="gap-2 rounded-full font-semibold bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 border-0 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 h-10 px-5"
         >
           <Plus className="h-4 w-4" />
           <span className="hidden sm:inline">Generate Report</span>
@@ -214,24 +214,24 @@ export function ReportGenerator({ onReportGenerated, isGenerating = false }: Rep
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-3 py-3">
           {/* Feature Highlights */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-6">
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+            <div className="flex items-start gap-2 p-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/30">
               <BarChart3 className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
               <div className="text-xs">
                 <p className="font-semibold text-blue-900 dark:text-blue-200">Automatic Structure</p>
                 <p className="text-blue-700 dark:text-blue-300">AI determines layout</p>
               </div>
             </div>
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-green-50 dark:bg-green-950/30">
+            <div className="flex items-start gap-2 p-2.5 rounded-lg bg-green-50 dark:bg-green-950/30">
               <Zap className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
               <div className="text-xs">
                 <p className="font-semibold text-green-900 dark:text-green-200">Smart Metadata</p>
                 <p className="text-green-700 dark:text-green-300">Title & description auto-generated</p>
               </div>
             </div>
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-purple-50 dark:bg-purple-950/30">
+            <div className="flex items-start gap-2 p-2.5 rounded-lg bg-purple-50 dark:bg-purple-950/30">
               <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
               <div className="text-xs">
                 <p className="font-semibold text-purple-900 dark:text-purple-200">Export Options</p>
@@ -248,34 +248,32 @@ export function ReportGenerator({ onReportGenerated, isGenerating = false }: Rep
 • Generate attendance report of last month
 • Show sales performance for this quarter
 • List top 10 products by revenue
-• Inventory status report for all warehouses
 
 Be specific about timeframes, metrics, and requirements..."
               value={userQuery}
               onChange={(e) => setUserQuery(e.target.value)}
-              className="min-h-[140px] rounded-lg border-slate-200 dark:border-slate-700 resize-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="min-h-[110px] rounded-lg border-slate-200 dark:border-slate-700 resize-none focus:ring-indigo-500 focus:border-indigo-500"
             />
             <p className="text-xs text-muted-foreground">
-              The more details you provide, the better the generated report will be.
+              Add timeframe, metrics, and required filters for better results.
             </p>
           </div>
 
           {/* Query Examples */}
-          <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
-            <p className="text-xs font-semibold mb-2 text-slate-700 dark:text-slate-300">
+          <div className="bg-slate-50 dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
+            <p className="text-xs font-semibold mb-1.5 text-slate-700 dark:text-slate-300">
               Need inspiration? Try these queries:
             </p>
             <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-400">
               <li>• "Monthly attendance report with absence reasons and trends"</li>
               <li>• "Top selling products this quarter with revenue comparison"</li>
-              <li>• "Department-wise salary distribution and performance metrics"</li>
               <li>• "Inventory levels below minimum threshold across all locations"</li>
             </ul>
           </div>
         </div>
 
         {/* Footer Actions */}
-        <div className="flex justify-between items-center pt-4 border-t border-slate-200 dark:border-slate-700">
+        <div className="flex justify-between items-center pt-3 border-t border-slate-200 dark:border-slate-700">
           <Button
             variant="outline"
             onClick={() => handleOpenChange(false)}

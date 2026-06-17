@@ -23,7 +23,6 @@ const exampleQueries = {
     'Low stock materials alert',
     'Production orders in progress',
     'Employees on leave this week',
-    'Monthly sales by category',
   ],
   ur: [
     'Aaj ki attendance report dikhao',
@@ -31,7 +30,6 @@ const exampleQueries = {
     'Kam stock materials ki list',
     'Production orders jo chal rahe hain',
     'Is hafte chutti pe employees',
-    'Category wise monthly sales',
   ],
 };
 
@@ -88,15 +86,15 @@ export function QueryInterface() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="w-full max-w-[1267px] mx-auto space-y-5">
       {/* Query Input Card */}
       <Card
         className={cn(
-          'p-6 transition-all duration-300 border-0 shadow-xl hover:shadow-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl',
+          'p-5 transition-all duration-300 border-0 shadow-xl hover:shadow-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl',
           isFocused && 'ring-2 ring-indigo-500 shadow-2xl shadow-indigo-500/20'
         )}
       >
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-2">
           {/* Main Input Area */}
           <div className="relative">
             <Textarea
@@ -110,7 +108,7 @@ export function QueryInterface() {
                   ? "Ask about employees, attendance, inventory, production, or sales..."
                   : "Employees, attendance, inventory, production, ya sales k baray me pochain..."
               }
-              className="min-h-[120px] max-h-[200px] text-base resize-none pr-14 focus-visible:ring-0 border-2 border-slate-200 dark:border-slate-700 shadow-sm bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 rounded-2xl py-4 px-5 placeholder:text-muted-foreground/60 hover:border-indigo-300 dark:hover:border-indigo-700 focus:border-indigo-500 dark:focus:border-indigo-500 transition-all duration-200"
+              className="min-h-[96px] max-h-[180px] text-sm resize-none pr-14 focus-visible:ring-0 border-2 border-slate-200 dark:border-slate-700 shadow-sm bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 rounded-2xl py-3 px-4 placeholder:text-muted-foreground/60 hover:border-indigo-300 dark:hover:border-indigo-700 focus:border-indigo-500 dark:focus:border-indigo-500 transition-all duration-200"
               disabled={isLoading}
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -119,7 +117,7 @@ export function QueryInterface() {
           </div>
 
           {/* Controls Row */}
-          <div className="flex items-center justify-between flex-wrap gap-4 pt-2">
+          <div className="flex items-center justify-between flex-wrap gap-3 pt-1">
             <div className="flex items-center gap-3">
               <span className="text-sm font-semibold text-muted-foreground">Language:</span>
               <LanguageToggle current={language} onChange={setLanguage} />
@@ -127,7 +125,7 @@ export function QueryInterface() {
 
             <div className="flex items-center gap-3">
               {results && (
-                <Button type="button" variant="outline" size="sm" onClick={clearResults} className="h-11 rounded-full font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 px-5">
+                <Button type="button" variant="outline" size="sm" onClick={clearResults} className="h-10 rounded-full font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 px-5">
                   <RotateCcw className="h-4 w-4 mr-2" />
                   <span className="text-sm">Clear</span>
                 </Button>
@@ -135,7 +133,7 @@ export function QueryInterface() {
               <Button 
                 type="submit" 
                 disabled={isLoading || !currentQuery.trim()} 
-                className="h-11 px-6 rounded-full font-bold shadow-lg hover:shadow-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 border-0 hover:scale-105 transition-all duration-200"
+                className="h-10 px-5 rounded-full font-bold shadow-lg hover:shadow-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 border-0 hover:scale-105 transition-all duration-200"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
@@ -156,17 +154,17 @@ export function QueryInterface() {
 
         {/* Example Queries */}
         {!results && !isLoading && (
-          <div className="mt-5 pt-5 border-t-2 border-slate-200 dark:border-slate-700">
-            <div className="flex items-center gap-2 mb-4">
+          <div className="mt-4 pt-4 border-t-2 border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-2 mb-3">
               <span className="text-sm font-bold text-foreground uppercase tracking-wide">💡 Quick Start Examples</span>
               <div className="h-px flex-1 bg-gradient-to-r from-slate-300 dark:from-slate-700 to-transparent"></div>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               {exampleQueries[language].map((query, index) => (
                 <Badge
                   key={query}
                   variant="secondary"
-                  className="cursor-pointer hover:bg-gradient-to-r hover:from-indigo-100 hover:to-blue-100 dark:hover:from-indigo-900/50 dark:hover:to-blue-900/50 hover:border-indigo-300 dark:hover:border-indigo-700 hover:scale-105 transition-all duration-200 py-2 px-4 text-sm font-semibold shadow-sm hover:shadow-md border-2 rounded-full"
+                  className="cursor-pointer hover:bg-gradient-to-r hover:from-indigo-100 hover:to-blue-100 dark:hover:from-indigo-900/50 dark:hover:to-blue-900/50 hover:border-indigo-300 dark:hover:border-indigo-700 hover:scale-105 transition-all duration-200 py-1.5 px-3 text-xs font-semibold shadow-sm hover:shadow-md border-2 rounded-full"
                   onClick={() => handleExampleClick(query)}
                 >
                   <span className="opacity-60 mr-2 font-bold">{index + 1}.</span>

@@ -84,7 +84,7 @@ export default function HistoryPage() {
   };
 
   const QueryCard = ({ query }: { query: typeof history[0] }) => (
-    <Card className="group p-5 hover:shadow-lg transition-all duration-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md rounded-2xl hover:-translate-y-1">
+    <Card className="group p-5 hover:shadow-premium-hover transition-all duration-300 hover:-translate-y-1 animate-slide-up">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2.5 mb-3">
@@ -164,7 +164,7 @@ export default function HistoryPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-md">
+      <Card className="p-6">
         <div className="flex items-center gap-3">
           <div className="p-3 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 shadow-md">
             <Clock className="h-6 w-6 text-white" />
@@ -176,10 +176,10 @@ export default function HistoryPage() {
             </p>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Filters */}
-      <Card className="p-4 border border-slate-200 dark:border-slate-800 shadow-md bg-white dark:bg-slate-900 rounded-2xl">
+      <Card className="p-4">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -217,7 +217,7 @@ export default function HistoryPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md rounded-xl p-1">
+        <TabsList className="bg-background/50 backdrop-blur-md border border-border/50 shadow-sm rounded-xl p-1">
           <TabsTrigger value="all" className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md font-medium px-4 py-2 text-sm">All Queries ({history.length})</TabsTrigger>
           <TabsTrigger value="favorites" className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md font-medium px-4 py-2 text-sm">
             <Star className="h-3.5 w-3.5 mr-1.5" />

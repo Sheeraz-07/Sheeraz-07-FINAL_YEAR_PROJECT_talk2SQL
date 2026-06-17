@@ -17,12 +17,10 @@ import { Badge } from '@/components/ui/badge';
 import {
   BookOpen,
   Video,
-  MessageCircle,
   Search,
   Copy,
   PlayCircle,
   HelpCircle,
-  Send,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -113,16 +111,9 @@ const faqs = [
 
 export default function HelpPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [contactForm, setContactForm] = useState({ subject: '', message: '' });
-
   const handleCopyExample = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Copied to clipboard');
-  };
-
-  const handleSubmitTicket = () => {
-    toast.success('Support ticket submitted');
-    setContactForm({ subject: '', message: '' });
   };
 
   const filteredFaqs = faqs.filter(
@@ -151,7 +142,7 @@ export default function HelpPage() {
       </div>
 
       <Tabs defaultValue="tutorials" className="space-y-6">
-        <TabsList className="grid grid-cols-4 max-w-lg mx-auto">
+        <TabsList className="grid grid-cols-3 max-w-lg mx-auto">
           <TabsTrigger value="tutorials">
             <Video className="h-4 w-4 mr-2" />
             Tutorials
@@ -163,10 +154,6 @@ export default function HelpPage() {
           <TabsTrigger value="faq">
             <HelpCircle className="h-4 w-4 mr-2" />
             FAQ
-          </TabsTrigger>
-          <TabsTrigger value="contact">
-            <MessageCircle className="h-4 w-4 mr-2" />
-            Contact
           </TabsTrigger>
         </TabsList>
 
@@ -254,45 +241,7 @@ export default function HelpPage() {
           </Card>
         </TabsContent>
 
-        {/* Contact */}
-        <TabsContent value="contact">
-          <Card className="p-6 max-w-lg mx-auto">
-            <h3 className="font-semibold text-lg mb-4">Submit a Support Ticket</h3>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="subject">Subject</Label>
-                <Input
-                  id="subject"
-                  placeholder="Brief description of your issue"
-                  value={contactForm.subject}
-                  onChange={(e) =>
-                    setContactForm({ ...contactForm, subject: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="message">Message</Label>
-                <Textarea
-                  id="message"
-                  placeholder="Describe your issue in detail..."
-                  rows={5}
-                  value={contactForm.message}
-                  onChange={(e) =>
-                    setContactForm({ ...contactForm, message: e.target.value })
-                  }
-                />
-              </div>
-              <Button
-                className="w-full"
-                onClick={handleSubmitTicket}
-                disabled={!contactForm.subject || !contactForm.message}
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Submit Ticket
-              </Button>
-            </div>
-          </Card>
-        </TabsContent>
+
       </Tabs>
     </div>
   );

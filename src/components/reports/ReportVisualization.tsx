@@ -57,10 +57,10 @@ function renderBarChart(data: Record<string, unknown>[], xAxis?: string, yAxis?:
   }));
 
   return (
-    <ResponsiveContainer width="100%" height={350}>
-      <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 60 }}>
+    <ResponsiveContainer width="100%" height={280}>
+      <BarChart data={chartData} margin={{ top: 12, right: 20, left: 0, bottom: 50 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-        <XAxis dataKey={xAxis} angle={-45} textAnchor="end" height={80} />
+        <XAxis dataKey={xAxis} angle={-45} textAnchor="end" height={60} />
         <YAxis />
         <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }} />
         <Bar dataKey={yAxis} fill="#3b82f6" radius={[8, 8, 0, 0]} />
@@ -78,10 +78,10 @@ function renderLineChart(data: Record<string, unknown>[], xAxis?: string, yAxis?
   }));
 
   return (
-    <ResponsiveContainer width="100%" height={350}>
-      <LineChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 60 }}>
+    <ResponsiveContainer width="100%" height={280}>
+      <LineChart data={chartData} margin={{ top: 12, right: 20, left: 0, bottom: 50 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-        <XAxis dataKey={xAxis} angle={-45} textAnchor="end" height={80} />
+        <XAxis dataKey={xAxis} angle={-45} textAnchor="end" height={60} />
         <YAxis />
         <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }} />
         <Legend />
@@ -100,10 +100,10 @@ function renderAreaChart(data: Record<string, unknown>[], xAxis?: string, yAxis?
   }));
 
   return (
-    <ResponsiveContainer width="100%" height={350}>
-      <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 60 }}>
+    <ResponsiveContainer width="100%" height={280}>
+      <AreaChart data={chartData} margin={{ top: 12, right: 20, left: 0, bottom: 50 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-        <XAxis dataKey={xAxis} angle={-45} textAnchor="end" height={80} />
+        <XAxis dataKey={xAxis} angle={-45} textAnchor="end" height={60} />
         <YAxis />
         <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }} />
         <Area type="monotone" dataKey={yAxis} stroke="#3b82f6" fill="#93c5fd" />
@@ -120,11 +120,11 @@ function renderPieChart(data: Record<string, unknown>[], labels?: string, values
   }));
 
   return (
-    <ResponsiveContainer width="100%" height={350}>
+    <ResponsiveContainer width="100%" height={280}>
       <PieChart>
         <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }} />
         <Legend />
-        <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={110} label>
+        <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={95} label>
           {pieData.map((_, index) => (
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
@@ -159,10 +159,10 @@ function renderStackedBarChart(
   const seriesKeys = Array.from(seriesSet).slice(0, 8);
 
   return (
-    <ResponsiveContainer width="100%" height={350}>
-      <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 60 }}>
+    <ResponsiveContainer width="100%" height={280}>
+      <BarChart data={chartData} margin={{ top: 12, right: 20, left: 0, bottom: 50 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-        <XAxis dataKey={xAxis} angle={-45} textAnchor="end" height={80} />
+        <XAxis dataKey={xAxis} angle={-45} textAnchor="end" height={60} />
         <YAxis />
         <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }} />
         <Legend />
@@ -215,12 +215,12 @@ export function ReportVisualization({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div>
-        <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+        <h3 className="text-base font-semibold text-foreground">{title}</h3>
         {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
       </div>
-      <Card className="p-6 border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-950/50">
+      <Card className="p-4 border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-950/50">
         {renderChart()}
       </Card>
     </div>

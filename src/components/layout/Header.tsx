@@ -105,11 +105,12 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl shadow-sm supports-[backdrop-filter]:bg-white/60 supports-[backdrop-filter]:dark:bg-slate-900/60">
+    <header className="sticky top-0 z-[201] w-full border-b border-divider/40 bg-background/50 backdrop-blur-2xl shadow-sm transition-all duration-300">
       <span className="sr-only">{title}</span>
-      <div className="container flex h-16 items-center px-4 lg:px-6 max-w-full">
-        {/* Logo & Brand */}
-        <div className="flex items-center gap-3 flex-shrink-0">
+      <div className="flex h-16 items-center px-4 lg:px-6 w-full justify-between">
+        {/* Left Section */}
+        <div className="flex items-center gap-3">
+          {/* Logo & Brand */}
           <Link href="/dashboard" className="flex items-center gap-2 group">
             <div className="relative">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 flex items-center justify-center hover:shadow-lg transition-all duration-200 hover:scale-105 shadow-md">
@@ -122,8 +123,10 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
           </Link>
         </div>
 
+
+
         {/* Center - Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-2 flex-1 justify-center">
+        <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
             {mainNavItems.map((item) => {
               const isActive = pathname === item.path || pathname.startsWith(item.path + '/');
               return (
@@ -131,11 +134,10 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
                   key={item.path}
                   href={item.path}
                   className={cn(
-                    'flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-all duration-200',
-                    'hover:bg-indigo-100 dark:hover:bg-indigo-900/50 hover:scale-105 hover:shadow-md',
+                    'flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-colors',
                     isActive 
-                      ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md' 
-                      : 'text-slate-700 dark:text-slate-300 hover:text-indigo-900 dark:hover:text-indigo-200'
+                      ? 'bg-primary/10 text-primary' 
+                      : 'text-default-500 hover:bg-default-100 hover:text-foreground'
                   )}
                 >
                   {isActive && (
@@ -150,23 +152,23 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
             {userCanAccessAdmin && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm text-slate-700 dark:text-slate-300 hover:text-indigo-900 dark:hover:text-indigo-200 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 hover:scale-105 hover:shadow-md transition-all duration-200">
+                  <Button variant="ghost" className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm text-default-500 hover:text-foreground hover:bg-default-100 transition-colors">
                     <span>Admin</span>
-                    <ChevronDown className="h-3.5 w-3.5" />
+                    <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 rounded-xl border-slate-200 dark:border-slate-800 shadow-xl">
+                <DropdownMenuContent align="end" className="w-56 rounded-xl border-divider shadow-md">
                   <DropdownMenuLabel className="font-bold text-sm">Administration</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {adminNavItems.map((item) => (
                     <DropdownMenuItem
                       key={item.path}
-                      className="cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-900 dark:hover:text-indigo-200 transition-colors rounded-lg p-3"
+                      className="cursor-pointer hover:bg-default-100 hover:text-foreground transition-colors rounded-lg p-2"
                       onClick={() => router.push(item.path)}
                     >
-                      <item.icon className="mr-3 h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                      <item.icon className="mr-3 h-4 w-4 text-default-500" />
                       <div>
-                        <div className="font-semibold text-sm">{item.label}</div>
+                        <div className="font-medium text-sm">{item.label}</div>
                         <div className="text-xs text-muted-foreground">{item.desc}</div>
                       </div>
                     </DropdownMenuItem>
@@ -182,7 +184,7 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden h-10 w-10 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 hover:scale-105 hover:shadow-md transition-all duration-200"
+            className="md:hidden h-10 w-10 rounded-lg hover:bg-default-100 transition-colors"
             onClick={onMobileMenuClick}
           >
             <Menu className="h-5 w-5" />
@@ -194,25 +196,24 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 hover:scale-105 hover:shadow-md transition-all duration-200"
+                className="h-10 w-10 rounded-lg hover:bg-default-100 transition-colors"
                 title="Search"
               >
                 <Search className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80 p-3 rounded-xl border-slate-200 dark:border-slate-800 shadow-xl">
+            <DropdownMenuContent align="end" className="w-80 p-2 rounded-xl border-divider shadow-md">
               <div className="relative">
                 <Search className={cn(
-                  "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors duration-200",
-                  searchFocused && "text-indigo-600 dark:text-indigo-400"
+                  "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-default-400 transition-colors",
+                  searchFocused && "text-primary"
                 )} />
                 <Input
                   placeholder="Quick search..."
                   className={cn(
-                    "pl-10 pr-4 h-11 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl font-medium text-sm",
-                    "focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 dark:focus:border-indigo-500",
-                    "hover:border-indigo-300 dark:hover:border-indigo-700",
-                    "transition-colors duration-200"
+                    "pl-9 pr-4 h-10 bg-default-100 border-none rounded-lg text-sm",
+                    "focus-visible:ring-2 focus-visible:ring-primary",
+                    "transition-colors"
                   )}
                   onFocus={() => setSearchFocused(true)}
                   onBlur={() => setSearchFocused(false)}
@@ -227,7 +228,7 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
             variant="ghost"
             size="icon"
             onClick={() => router.push('/settings')}
-            className="hidden md:flex h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 hover:shadow-md transition-all duration-200"
+            className="hidden md:flex h-10 w-10 rounded-lg hover:bg-default-100 transition-colors"
             title="Settings"
           >
             <Settings className="h-5 w-5" />
@@ -238,7 +239,7 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
             variant="ghost"
             size="icon"
             onClick={() => router.push('/help')}
-            className="hidden md:flex h-10 w-10 rounded-xl hover:bg-green-100 dark:hover:bg-green-900/30 hover:scale-105 hover:shadow-md transition-all duration-200"
+            className="hidden md:flex h-10 w-10 rounded-lg hover:bg-default-100 transition-colors"
             title="Help"
           >
             <HelpCircle className="h-5 w-5" />
@@ -249,7 +250,7 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
             variant="ghost"
             size="icon"
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="h-10 w-10 rounded-xl hover:bg-orange-100 dark:hover:bg-orange-900/30 hover:scale-105 hover:shadow-md transition-all duration-200"
+            className="h-10 w-10 rounded-lg hover:bg-default-100 transition-colors"
             title="Toggle theme"
           >
             {theme === 'dark' ? (
@@ -265,7 +266,7 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-10 w-10 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 hover:scale-105 hover:shadow-md transition-all duration-200 relative overflow-visible"
+                className="h-10 w-10 rounded-lg hover:bg-default-100 transition-colors relative"
                 title="Notifications"
               >
                 <Bell className="h-5 w-5" />
@@ -328,15 +329,15 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="flex items-center gap-2 h-10 px-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-200"
+                className="flex items-center gap-2 h-10 px-2 rounded-lg hover:bg-default-100 transition-colors"
               >
-                <Avatar className="h-8 w-8 ring-2 ring-indigo-200 dark:ring-indigo-800">
+                <Avatar className="h-8 w-8">
                   <AvatarImage src={user?.avatar} />
-                  <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-blue-600 text-white text-sm font-bold">
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
                     {user?.username?.charAt(0) || user?.name?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden lg:block font-semibold text-sm max-w-[100px] truncate">{user?.username || user?.name || 'User'}</span>
+                <span className="hidden lg:block font-medium text-sm max-w-[100px] truncate">{user?.username || user?.name || 'User'}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 rounded-xl border-slate-200 dark:border-slate-800 shadow-xl">

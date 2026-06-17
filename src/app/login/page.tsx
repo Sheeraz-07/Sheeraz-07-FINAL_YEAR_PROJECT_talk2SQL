@@ -58,10 +58,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-auth-mesh relative overflow-hidden">
       {/* Left Section - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-background">
-        <Card className="w-full max-w-md border-border/50 shadow-xl animate-fade-in">
+      <div className="flex-1 flex items-center justify-center p-8 relative z-10">
+        <Card className="w-full max-w-md auth-glass-panel transition-all duration-500 animate-fade-in hover:shadow-2xl">
           <CardHeader className="space-y-4 pb-8">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center">
@@ -104,7 +104,7 @@ export default function LoginPage() {
                   <Label htmlFor="password" className="text-sm font-semibold">Password</Label>
                   <Link
                     href="/forgot-password"
-                    className="text-xs text-accent hover:text-accent/80 font-medium transition-colors"
+                    className="text-xs text-accent font-medium hover-link-contrast"
                   >
                     Forgot password?
                   </Link>
@@ -122,13 +122,13 @@ export default function LoginPage() {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 rounded-lg hover:bg-muted"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 rounded-lg text-muted-foreground hover-icon-contrast"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      <Eye className="h-4 w-4" />
                     )}
                   </Button>
                 </div>
@@ -160,7 +160,7 @@ export default function LoginPage() {
           <CardFooter className="flex-col space-y-4 pt-6 border-t">
             <p className="text-sm text-muted-foreground text-center">
               Don&apos;t have an account?{' '}
-              <Link href="/register" className="text-accent font-semibold hover:text-accent/80 transition-colors">
+              <Link href="/register" className="text-accent font-semibold hover-link-contrast">
                 Sign up
               </Link>
             </p>
@@ -169,43 +169,37 @@ export default function LoginPage() {
       </div>
 
       {/* Right Section - Branding */}
-      <div className="hidden lg:flex flex-1 bg-gradient-dark items-center justify-center p-12 relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-accent rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-accent rounded-full blur-3xl" />
-        </div>
-
-        <div className="relative z-10 max-w-lg text-white space-y-8">
+      <div className="hidden lg:flex flex-1 items-center justify-center p-12 relative z-10">
+        <div className="relative z-10 max-w-lg auth-glass-panel p-10 rounded-3xl">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold">
               <Database className="h-4 w-4" />
               Employee Internal Dashboard
             </div>
-            <h2 className="text-4xl font-bold leading-tight">
+            <h2 className="text-4xl font-bold leading-tight tracking-tight">
               Query your databases naturally with AI
             </h2>
-            <p className="text-lg text-white/80">
+            <p className="text-lg text-muted-foreground font-medium">
               Transform natural language into SQL queries instantly. No technical expertise required.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-6 pt-8">
-            <div className="space-y-2">
-              <div className="text-3xl font-bold">1000+</div>
-              <div className="text-sm text-white/70">Queries Processed</div>
+            <div className="space-y-1">
+              <div className="text-3xl font-bold tracking-tight text-foreground">1000+</div>
+              <div className="text-sm font-medium text-muted-foreground">Queries Processed</div>
             </div>
-            <div className="space-y-2">
-              <div className="text-3xl font-bold">99.9%</div>
-              <div className="text-sm text-white/70">Accuracy Rate</div>
+            <div className="space-y-1">
+              <div className="text-3xl font-bold tracking-tight text-foreground">99.9%</div>
+              <div className="text-sm font-medium text-muted-foreground">Accuracy Rate</div>
             </div>
-            <div className="space-y-2">
-              <div className="text-3xl font-bold">24/7</div>
-              <div className="text-sm text-white/70">Availability</div>
+            <div className="space-y-1">
+              <div className="text-3xl font-bold tracking-tight text-foreground">24/7</div>
+              <div className="text-sm font-medium text-muted-foreground">Availability</div>
             </div>
-            <div className="space-y-2">
-              <div className="text-3xl font-bold">50ms</div>
-              <div className="text-sm text-white/70">Avg Response</div>
+            <div className="space-y-1">
+              <div className="text-3xl font-bold tracking-tight text-foreground">50ms</div>
+              <div className="text-sm font-medium text-muted-foreground">Avg Response</div>
             </div>
           </div>
         </div>

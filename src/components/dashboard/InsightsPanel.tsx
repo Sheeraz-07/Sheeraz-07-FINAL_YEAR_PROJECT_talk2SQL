@@ -43,21 +43,21 @@ export function InsightsPanel({ insights, className }: InsightsPanelProps) {
   };
 
   return (
-    <Card className={cn('border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl', className)}>
-      <div className="flex items-center justify-between p-6 pb-4 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-br from-purple-50 to-pink-50/50 dark:from-purple-950/50 dark:to-pink-950/30">
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 shadow-lg">
-            <Lightbulb className="h-6 w-6 text-white" />
+    <Card className={cn('overflow-y-auto shadow-premium hover:shadow-premium-hover transition-all duration-300 w-full h-[315px] animate-slide-up', className)} style={{ animationDelay: '0.3s' }}>
+      <div className="flex items-center justify-between p-4 pb-3 border-b border-border/40 bg-gradient-to-br from-primary/5 to-transparent">
+        <div className="flex items-center gap-2">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 shadow-lg">
+            <Lightbulb className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h3 className="font-bold text-lg">Business Insights</h3>
-            <p className="text-sm text-muted-foreground font-medium">Live database-driven recommendations</p>
+            <h3 className="font-bold text-base">Business Insights</h3>
+            <p className="text-xs text-muted-foreground font-medium">Live database-driven recommendations</p>
           </div>
         </div>
       </div>
-      <div className="p-6 space-y-4">
+      <div className="p-4 space-y-3">
         {insights.length === 0 && (
-          <div className="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-sm text-muted-foreground">
+          <div className="p-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-xs text-muted-foreground">
             No insights available for the selected database and time range yet.
           </div>
         )}
@@ -67,27 +67,27 @@ export function InsightsPanel({ insights, className }: InsightsPanelProps) {
             <div
               key={insight.id}
               className={cn(
-                'p-5 rounded-2xl border-2 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] cursor-pointer group',
+                'p-3 rounded-xl border-2 transition-all duration-300 hover:shadow-xl hover:scale-[1.01] cursor-pointer group',
                 getColors(insight.trend)
               )}
             >
-              <div className="flex items-start gap-4">
+              <div className="flex items-start gap-3">
                 <div className={cn(
-                  'p-2.5 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300',
+                  'p-2 rounded-lg shadow-md group-hover:scale-110 transition-transform duration-300',
                   insight.trend === 'up' && 'bg-gradient-to-br from-green-500 to-emerald-600',
                   insight.trend === 'down' && 'bg-gradient-to-br from-red-500 to-rose-600',
                   insight.trend === 'alert' && 'bg-gradient-to-br from-orange-500 to-amber-600',
                   insight.trend === 'neutral' && 'bg-gradient-to-br from-indigo-500 to-blue-600'
                 )}>
-                  <Icon className="h-5 w-5 text-white" />
+                  <Icon className="h-4 w-4 text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-slate-900 dark:text-white text-base">{insight.title}</p>
-                  <p className="text-sm text-muted-foreground mt-2 font-medium leading-relaxed">
+                  <p className="font-bold text-slate-900 dark:text-white text-sm">{insight.title}</p>
+                  <p className="text-xs text-muted-foreground mt-1 font-medium leading-snug">
                     {insight.description}
                   </p>
                   {insight.value && (
-                    <p className="text-2xl font-bold mt-3 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">{insight.value}</p>
+                    <p className="text-lg font-bold mt-1.5 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">{insight.value}</p>
                   )}
                 </div>
               </div>

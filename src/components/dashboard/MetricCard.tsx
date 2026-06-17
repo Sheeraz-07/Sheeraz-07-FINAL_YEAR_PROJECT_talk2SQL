@@ -15,7 +15,7 @@ interface MetricCardProps {
 export function MetricCard({ title, value, change, icon: Icon, trend, className }: MetricCardProps) {
   return (
     <Card className={cn(
-      'group relative overflow-hidden border-0 bg-white dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 hover:scale-[1.02] cursor-pointer',
+      'group relative overflow-hidden shadow-premium hover:shadow-premium-hover transition-all duration-300 h-[140px] w-full p-4 cursor-pointer',
       className
     )}>
       {/* Background gradient overlay */}
@@ -27,34 +27,34 @@ export function MetricCard({ title, value, change, icon: Icon, trend, className 
       )} />
       
       <div className="relative z-10">
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start justify-between mb-3">
           <div className={cn(
-            'p-3 rounded-xl transition-all duration-300 shadow-md group-hover:shadow-lg group-hover:scale-110',
-            trend === 'up' && 'bg-gradient-to-br from-green-500 to-emerald-600',
-            trend === 'down' && 'bg-gradient-to-br from-red-500 to-rose-600',
-            (!trend || trend === 'neutral') && 'bg-gradient-to-br from-indigo-600 to-blue-600'
+            'p-2.5 rounded-xl transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:scale-105',
+            trend === 'up' && 'bg-green-500/10 text-green-600 dark:text-green-400',
+            trend === 'down' && 'bg-red-500/10 text-red-600 dark:text-red-400',
+            (!trend || trend === 'neutral') && 'bg-primary/10 text-primary'
           )}>
-            <Icon className="h-5 w-5 text-white" />
+            <Icon className="h-4 w-4" />
           </div>
           {change !== undefined && (
             <div className={cn(
-              'flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold shadow-sm',
+              'flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.65rem] font-bold shadow-sm',
               trend === 'up' && 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
               trend === 'down' && 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
               trend === 'neutral' && 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
             )}>
-              {trend === 'up' && <ArrowUpRight className="h-3 w-3" />}
-              {trend === 'down' && <ArrowDownRight className="h-3 w-3" />}
-              {trend === 'neutral' && <Minus className="h-3 w-3" />}
+              {trend === 'up' && <ArrowUpRight className="h-2.5 w-2.5" />}
+              {trend === 'down' && <ArrowDownRight className="h-2.5 w-2.5" />}
+              {trend === 'neutral' && <Minus className="h-2.5 w-2.5" />}
               {Math.abs(change)}%
             </div>
           )}
         </div>
-        <div className="space-y-1">
-          <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{title}</p>
-          <p className="text-3xl font-bold bg-gradient-to-br from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent leading-tight">{value}</p>
+        <div className="space-y-0.5">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{title}</p>
+          <p className="text-[1.5rem] font-bold text-foreground leading-tight">{value}</p>
           {change !== undefined && (
-            <p className="text-xs text-muted-foreground font-medium mt-2">
+            <p className="text-[0.65rem] text-muted-foreground font-medium mt-1">
               {trend === 'up' ? '↑ Increase from last period' : trend === 'down' ? '↓ Decrease from last period' : '→ No change'}
             </p>
           )}

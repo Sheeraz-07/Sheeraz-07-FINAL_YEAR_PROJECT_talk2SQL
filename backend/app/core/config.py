@@ -53,7 +53,7 @@ class Settings(BaseSettings):
     # TODO: Set your LongCat API base URL and key
     LONGCAT_API_BASE: str = "https://api.longcat.chat/openai/"
     LONGCAT_API_KEY: str = "<LONGCAT_API_KEY>"
-    LONGCAT_MODEL: str = "longcat-flash-chat"
+    LONGCAT_MODEL: str = "LongCat-2.0-Preview"
     LONGCAT_TEMPERATURE: float = 0.0
     LONGCAT_MAX_TOKENS: int = 1024
 

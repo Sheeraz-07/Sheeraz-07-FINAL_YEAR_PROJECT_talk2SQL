@@ -248,21 +248,21 @@ export default function ReportsPage() {
         }
       />
 
-      <div className="space-y-6">
+      <div className="max-w-[1267px] mx-auto space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-[2rem] bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-2xl border border-slate-200/60 dark:border-white/10 p-8 md:p-10">
+      <Card className="relative overflow-hidden p-6 md:p-7">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/6 to-cyan-400/6 dark:from-indigo-500/20 dark:via-purple-500/20 dark:to-pink-500/20"></div>
         <div className="relative z-10">
-          <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6 mb-6">
-            <div className="flex items-start gap-4">
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 dark:from-cyan-500 dark:via-blue-600 dark:to-indigo-600 shadow-xl">
-                <FileText className="h-7 w-7 text-white" />
+          <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4 mb-5">
+            <div className="flex items-start gap-3">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 dark:from-cyan-500 dark:via-blue-600 dark:to-indigo-600 shadow-xl">
+                <FileText className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+                <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
                   Reports
                 </h2>
-                <p className="text-slate-700 dark:text-slate-300 text-sm mt-2 font-medium max-w-2xl">
+                <p className="text-slate-700 dark:text-slate-300 text-sm mt-1.5 font-medium max-w-2xl">
                   Generate professional reports with visualizations, insights, and detailed analysis
                 </p>
               </div>
@@ -273,43 +273,43 @@ export default function ReportsPage() {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
-            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/50 shadow">
-              <p className="text-xs font-semibold text-cyan-600 dark:text-cyan-300 uppercase tracking-[0.2em]">Total Reports</p>
-              <p className="text-3xl font-bold text-foreground mt-2">{reports.length}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/50 shadow">
+              <p className="text-[0.65rem] font-semibold text-cyan-600 dark:text-cyan-300 uppercase tracking-[0.18em]">Total Reports</p>
+              <p className="text-2xl font-bold text-foreground mt-1">{reports.length}</p>
             </div>
-            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/50 shadow">
-              <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-300 uppercase tracking-[0.2em]">Generated</p>
-              <p className="text-3xl font-bold text-foreground mt-2">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/50 shadow">
+              <p className="text-[0.65rem] font-semibold text-emerald-600 dark:text-emerald-300 uppercase tracking-[0.18em]">Generated</p>
+              <p className="text-2xl font-bold text-foreground mt-1">
                 {reports.filter((r) => r.status === 'generated').length}
               </p>
             </div>
-            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/50 shadow">
-              <p className="text-xs font-semibold text-violet-600 dark:text-violet-300 uppercase tracking-[0.2em]">Database</p>
-              <p className="text-3xl font-bold text-foreground mt-2 capitalize">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/50 shadow">
+              <p className="text-[0.65rem] font-semibold text-violet-600 dark:text-violet-300 uppercase tracking-[0.18em]">Database</p>
+              <p className="text-2xl font-bold text-foreground mt-1 capitalize">
                 {selectedDatabase === 'sql_server' ? 'SQL Server' : 'Supabase'}
               </p>
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Filters and Search */}
-      <div className="space-y-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70 bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl p-4 md:p-5 shadow-lg">
-        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+      <Card className="space-y-3 p-3 md:p-4">
+        <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
           <div className="flex-1 relative">
             <Input
               placeholder="Search reports by title or description..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 rounded-xl border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-950/60"
+              className="h-10 pl-10 rounded-xl border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-950/60"
             />
             <SearchX className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2 rounded-xl bg-white/80 dark:bg-slate-950/60">
+              <Button variant="outline" className="gap-2 h-10 rounded-xl bg-white/80 dark:bg-slate-950/60">
                 <Filter className="h-4 w-4" />
                 <span className="hidden sm:inline">
                   {selectedType === 'all' ? 'All Types' : selectedType.replace('_', ' ')}
@@ -336,7 +336,7 @@ export default function ReportsPage() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <div className="flex items-center gap-2 p-1.5 bg-slate-100/90 dark:bg-slate-900/80 backdrop-blur-xl rounded-xl border border-slate-200/70 dark:border-slate-700/50">
+          <div className="flex items-center gap-1.5 p-1.5 bg-slate-100/90 dark:bg-slate-900/80 backdrop-blur-xl rounded-xl border border-slate-200/70 dark:border-slate-700/50">
             <Button
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="icon"
@@ -361,14 +361,14 @@ export default function ReportsPage() {
             </Button>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Reports Grid/List */}
       {filteredReports.length > 0 ? (
         <div
           className={cn(
-            'gap-5',
-            viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3' : 'space-y-4'
+            'gap-4',
+            viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3' : 'space-y-3'
           )}
         >
           {filteredReports.map((report) => {
@@ -378,14 +378,14 @@ export default function ReportsPage() {
             <Card
               key={report.id}
               className={cn(
-                'group relative overflow-hidden hover:shadow-2xl transition-all duration-300 bg-white/85 dark:bg-slate-900/80 backdrop-blur-sm border-slate-200 dark:border-slate-700 rounded-xl p-3',
-                viewMode === 'list' && 'flex items-center gap-3 p-3'
+                'group relative overflow-hidden hover:-translate-y-1 hover:shadow-2xl hover:border-accent/40 transition-all duration-400 cursor-pointer',
+                viewMode === 'list' ? 'flex items-center gap-5 p-4' : 'flex flex-col gap-4 p-5'
               )}
             >
-              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-500 opacity-80" />
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div
                 className={cn(
-                  'rounded-lg bg-gradient-to-br p-2 text-white shadow-md group-hover:shadow-lg transition-shadow flex items-center justify-center',
+                  'relative z-10 rounded-xl bg-gradient-to-br p-2 text-white shadow-md group-hover:shadow-lg transition-all duration-300 flex items-center justify-center group-hover:scale-110',
                   displayType === 'sales' && 'from-blue-500 to-blue-600',
                   displayType === 'attendance' && 'from-green-500 to-emerald-600',
                   displayType === 'inventory' && 'from-purple-500 to-purple-600',
@@ -393,49 +393,49 @@ export default function ReportsPage() {
                   displayType === 'hr_analytics' && 'from-pink-500 to-pink-600',
                   displayType === 'financial' && 'from-indigo-500 to-indigo-600',
                   displayType === 'custom' && 'from-slate-500 to-slate-600',
-                  viewMode === 'list' && 'h-10 w-10 flex-shrink-0'
+                  viewMode === 'list' ? 'h-10 w-10 flex-shrink-0' : 'h-12 w-12'
                 )}
               >
                 <BarChart2 className="h-5 w-5" />
               </div>
 
-              <div className={cn('flex-1', viewMode === 'list' && 'min-w-0')}>
+              <div className={cn('relative z-10 flex-1', viewMode === 'list' && 'min-w-0')}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-lg text-foreground line-clamp-2">{report.title}</h3>
+                    <h3 className="font-semibold text-sm md:text-base text-foreground line-clamp-2">{report.title}</h3>
                     {report.description && (
-                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-5">
+                      <p className="text-[0.65rem] text-muted-foreground line-clamp-2 mt-1 leading-4">
                         {report.description}
                       </p>
                     )}
                   </div>
-                  <Badge className={cn('text-[11px] font-semibold py-0.5 px-2 flex-shrink-0', getTypeColor(displayType))}>
+                  <Badge className={cn('text-[0.65rem] font-semibold py-0.5 px-2 flex-shrink-0', getTypeColor(displayType))}>
                     {displayType.replace('_', ' ')}
                   </Badge>
                 </div>
 
-                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
                   <Badge
                     variant="outline"
-                    className={cn('text-[11px] font-semibold capitalize px-2 py-0.5', getStatusColor(report.status))}
+                    className={cn('text-[0.65rem] font-semibold capitalize px-2 py-0.5', getStatusColor(report.status))}
                   >
                     {report.status}
                   </Badge>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-[0.65rem] text-muted-foreground">
                     {formatDate(report.createdAt)}
                   </span>
                   {report.rowCount && (
-                    <span className="text-xs text-muted-foreground">{report.rowCount} rows</span>
+                    <span className="text-[0.65rem] text-muted-foreground">{report.rowCount} rows</span>
                   )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 flex-shrink-0">
+              <div className={cn("relative z-10 flex items-center gap-2", viewMode === 'grid' && "mt-auto pt-4 border-t border-border/50")}>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => handleViewReport(report)}
-                  className="h-7 px-2 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-950/50"
+                  className="h-8 px-2 rounded-md"
                   title="View Report"
                 >
                   <Eye className="h-4 w-4" />
@@ -445,7 +445,7 @@ export default function ReportsPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 px-2 rounded-md hover:bg-emerald-50 dark:hover:bg-emerald-950/50"
+                      className="h-8 px-2 rounded-md"
                       title="Export Report"
                     >
                       <Download className="h-4 w-4" />
@@ -473,7 +473,7 @@ export default function ReportsPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="h-8 w-8 rounded-md"
                     >
                       <MoreVertical className="h-4 w-4" />
                     </Button>
@@ -494,14 +494,14 @@ export default function ReportsPage() {
           })}
         </div>
       ) : (
-        <Card className="p-12 text-center bg-white/80 dark:bg-slate-900/70 border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg">
-          <div className="space-y-4 max-w-md mx-auto">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 text-white shadow-md">
-                <FileText className="h-6 w-6" />
+        <Card className="p-8 text-center bg-white/80 dark:bg-slate-900/70 border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg">
+          <div className="space-y-3 max-w-md mx-auto">
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 text-white shadow-md">
+                <FileText className="h-5 w-5" />
               </div>
             <div>
-              <p className="font-semibold text-foreground text-lg">No reports found</p>
-              <p className="text-sm text-muted-foreground mt-2 leading-6">
+              <p className="font-semibold text-foreground text-base">No reports found</p>
+              <p className="text-sm text-muted-foreground mt-1 leading-5">
                 {searchQuery || selectedType !== 'all'
                   ? 'Try adjusting your search or filters to surface more reports.'
                   : 'Create your first report to start building a searchable report history.'}

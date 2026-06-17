@@ -66,17 +66,16 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         href={path}
         onClick={() => onToggle()}
         className={cn(
-          'group flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300',
-          'hover:bg-sidebar-accent hover:shadow-md hover:-translate-x-1',
+          'group flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
           isActive 
-            ? 'bg-accent text-accent-foreground font-bold shadow-lg hover:shadow-xl' 
-            : 'text-sidebar-foreground/70 hover:text-sidebar-foreground font-medium',
-          isCollapsed && 'justify-center px-2'
+            ? 'bg-primary/10 text-primary font-semibold shadow-[inset_3px_0_0_hsl(var(--primary))]' 
+            : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground hover:translate-x-1',
+          isCollapsed && 'justify-center px-2 shadow-none'
         )}
       >
         <Icon className={cn(
-          'h-6 w-6 flex-shrink-0 transition-all duration-300',
-          isActive ? 'scale-110 drop-shadow-md' : 'group-hover:scale-110 group-hover:rotate-3'
+          'h-5 w-5 flex-shrink-0 transition-all duration-300',
+          isActive ? 'text-primary' : 'group-hover:scale-110'
         )} />
         {!isCollapsed && (
           <span className="text-sm truncate font-medium">{label}</span>
@@ -104,26 +103,24 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300',
+        'z-[202] h-screen bg-background/40 backdrop-blur-3xl border-r border-border/30 transition-all duration-300 flex-shrink-0 shadow-lg',
         isCollapsed ? 'w-[72px]' : 'w-64'
       )}
     >
       <div className="flex flex-col h-full">
         {/* Logo & Brand */}
         <div className={cn(
-          'flex items-center h-16 px-4 border-b border-sidebar-border',
+          'flex items-center h-16 px-4 border-b border-divider',
           isCollapsed ? 'justify-center' : 'gap-3'
         )}>
           <div className="relative group">
-            <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 hover:rotate-6">
-              <Sparkles className="h-6 w-6 text-accent-foreground animate-pulse" />
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Sparkles className="h-5 w-5 text-primary" />
             </div>
-            <div className="absolute inset-0 rounded-xl bg-accent/50 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
           </div>
           {!isCollapsed && (
             <div className="flex flex-col animate-slide-right">
-              <span className="font-extrabold text-lg tracking-tight">Talk2SQL</span>
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">AI Platform</span>
+              <span className="font-bold text-lg tracking-tight uppercase">Talk2SQL</span>
             </div>
           )}
         </div>
@@ -132,7 +129,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
           {!isCollapsed && (
             <div className="px-3 pb-2">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <span className="text-xs font-semibold text-default-400 uppercase tracking-wider">
                 Main Menu
               </span>
             </div>
@@ -146,11 +143,11 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             <>
               <div className={cn(
                 'pt-6 pb-2',
-                isCollapsed ? 'border-t border-sidebar-border mt-4' : ''
+                isCollapsed ? 'border-t border-divider mt-4' : ''
               )}>
                 {!isCollapsed && (
                   <div className="px-3">
-                    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    <span className="text-xs font-semibold text-default-400 uppercase tracking-wider">
                       Administration
                     </span>
                   </div>
@@ -165,11 +162,11 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           {/* Bottom Section */}
           <div className={cn(
             'pt-6',
-            isCollapsed ? 'border-t border-sidebar-border mt-4' : ''
+            isCollapsed ? 'border-t border-divider mt-4' : ''
           )}>
             {!isCollapsed && (
               <div className="px-3 pb-2">
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="text-xs font-semibold text-default-400 uppercase tracking-wider">
                   Support
                 </span>
               </div>
@@ -181,21 +178,21 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         </nav>
 
         {/* User Profile */}
-        <div className="p-3 border-t border-sidebar-border">
+        <div className="p-3 border-t border-divider">
           <div className={cn(
-            'flex items-center gap-3 p-3 rounded-xl bg-sidebar-accent/50 hover:bg-sidebar-accent transition-all duration-300 hover:shadow-lg hover:scale-[1.02] group',
+            'flex items-center gap-3 p-2 rounded-lg hover:bg-default-100 transition-colors group cursor-pointer',
             isCollapsed && 'justify-center'
           )}>
-            <Avatar className="h-10 w-10 ring-2 ring-sidebar-border hover:ring-accent transition-all duration-300 group-hover:scale-110">
+            <Avatar className="h-8 w-8">
               <AvatarImage src={user?.avatar} />
-              <AvatarFallback className="bg-accent text-accent-foreground text-sm font-bold">
+              <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
                 {user?.username?.charAt(0) || user?.name?.charAt(0) || 'U'}
               </AvatarFallback>
             </Avatar>
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold truncate">{user?.username || user?.name || 'User'}</p>
-                <p className="text-xs text-muted-foreground truncate font-medium">{user?.email || 'user@example.com'}</p>
+                <p className="text-sm font-semibold truncate">{user?.username || user?.name || 'User'}</p>
+                <p className="text-xs text-default-500 truncate">{user?.email || 'user@example.com'}</p>
               </div>
             )}
             {!isCollapsed && (
@@ -205,9 +202,9 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                     variant="ghost" 
                     size="icon" 
                     onClick={logout} 
-                    className="h-9 w-9 hover:bg-destructive/10 hover:text-destructive hover:rotate-12 transition-all duration-300"
+                    className="h-8 w-8 hover:bg-danger/10 hover:text-danger transition-colors"
                   >
-                    <LogOut className="h-5 w-5" />
+                    <LogOut className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="font-semibold">Sign out</TooltipContent>
@@ -222,16 +219,15 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           size="icon"
           onClick={onToggle}
           className={cn(
-            'absolute -right-3 top-20 h-8 w-8 rounded-full border-2 border-sidebar-border bg-sidebar shadow-xl',
-            'hover:bg-sidebar-accent hover:scale-125 hover:rotate-180 transition-all duration-500',
-            'hover:border-accent hover:shadow-accent/30',
+            'absolute -right-3 top-20 h-6 w-6 rounded-full border border-divider bg-background shadow-sm',
+            'hover:bg-default-100 transition-colors',
             'hidden lg:flex items-center justify-center'
           )}
         >
           {isCollapsed ? (
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-4 w-4 text-default-500" />
           ) : (
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-4 w-4 text-default-500" />
           )}
         </Button>
       </div>
