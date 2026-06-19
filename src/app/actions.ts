@@ -22,7 +22,7 @@ async function fetchUserProfileByEmail(supabase: SupabaseClient, email: string, 
   let query = supabase
     .from('users')
     .select('user_id, emp_id, username, role, email, last_login, auth_user_id, status')
-    .eq('email', email);
+    .ilike('email', email); // Use ilike for case-insensitive matching
     
   if (accessToken) {
     query = query.setHeader('Authorization', `Bearer ${accessToken}`);
@@ -93,13 +93,20 @@ async function notifyAdminsOnSignup(email: string, fullName: string) {
   }
 }
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function signUpAction(
-  email: string,
+  rawEmail: string,
   password: string,
   fullName: string,
   empId?: number
 ) {
   try {
+    const email = rawEmail.toLowerCase().trim();
+    if (!EMAIL_REGEX.test(email)) {
+      return { success: false, error: 'Please enter a valid email address in lowercase.' };
+    }
+
     const supabase = await createServerSupabaseClient();
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -162,9 +169,28 @@ export async function signUpAction(
   }
 }
 
-export async function signInAction(email: string, password: string) {
+export async function signInAction(rawEmail: string, password: string) {
   try {
+    const email = rawEmail.toLowerCase().trim();
+    if (!EMAIL_REGEX.test(email)) {
+      return { success: false, error: 'Please enter a valid email address.' };
+    }
+
     const supabase = await createServerSupabaseClient();
+
+    // Check if the user exists in our database first using the admin client
+    // We MUST use the admin client here because the user isn't logged in yet, 
+    // so Row Level Security (RLS) will block standard queries and return null.
+    const adminSupabase = createServerAdminClient();
+    const { data: existingUser } = await adminSupabase
+      .from('users')
+      .select('user_id')
+      .ilike('email', email)
+      .maybeSingle();
+
+    if (!existingUser) {
+      return { success: false, error: 'User not registered. Please create an account first.' };
+    }
 
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
@@ -260,12 +286,11 @@ export async function signOutAction() {
     if (error) {
       throw error;
     }
-
-    redirect('/login');
   } catch (error) {
     console.error('Sign out error:', error);
-    redirect('/login');
   }
+  
+  redirect('/login');
 }
 
 export async function getCurrentUserAction(): Promise<User | null> {

@@ -215,10 +215,13 @@ export async function promoteUserToAdmin(
     await requireRole('super_admin');
     const supabase = await createServerSupabaseClient();
 
+    const admin = await getCurrentUser();
+    
     const { error } = await supabase
       .from('users')
       .update({ role: 'admin' })
       .eq('user_id', userId);
+      
     await createNotification({
       recipient_id: userId,
       actor_id: admin?.user_id || null,
@@ -232,7 +235,6 @@ export async function promoteUserToAdmin(
       throw error;
     }
 
-    const admin = await getCurrentUser();
     await logAdminEvent(admin?.user_id, 'promote_to_admin', { promoted_user_id: userId });
     revalidatePath('/admin/users');
 
@@ -260,10 +262,13 @@ export async function demoteAdminToUser(
       throw new Error('Cannot demote super_admin');
     }
 
+    const admin = await getCurrentUser();
+
     const { error } = await supabase
       .from('users')
       .update({ role: 'user' })
       .eq('user_id', userId);
+      
     await createNotification({
       recipient_id: userId,
       actor_id: admin?.user_id || null,
@@ -277,7 +282,6 @@ export async function demoteAdminToUser(
       throw error;
     }
 
-    const admin = await getCurrentUser();
     await logAdminEvent(admin?.user_id, 'demote_to_user', { demoted_user_id: userId });
     revalidatePath('/admin/users');
 
@@ -290,11 +294,32 @@ export async function demoteAdminToUser(
 
 export async function deleteUserAccount(userId: number): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await requireRole('super_admin');
+    const admin = await requireRole(['admin', 'super_admin']);
     if (admin.user_id === userId) {
       throw new Error('You cannot delete your own account');
     }
+    
     const supabase = await createServerSupabaseClient();
+    
+    const { data: targetUser } = await supabase
+      .from('users')
+      .select('role, auth_user_id')
+      .eq('user_id', userId)
+      .maybeSingle<{ role: string | null; auth_user_id: string | null }>();
+      
+    if (admin.role !== 'super_admin' && targetUser?.role === 'super_admin') {
+      throw new Error('Admins cannot delete a super admin account');
+    }
+
+    if (targetUser?.auth_user_id) {
+      const adminClient = createServerAdminClient();
+      const { error: authError } = await adminClient.auth.admin.deleteUser(targetUser.auth_user_id);
+      if (authError) {
+        console.warn('Failed to delete user from Supabase Auth:', authError);
+        throw new Error(`Failed to delete from Auth: ${authError.message}`);
+      }
+    }
+
     const { error } = await supabase.from('users').delete().eq('user_id', userId);
     if (error) throw error;
     await logAdminEvent(admin.user_id, 'delete_user', { user_id: userId });

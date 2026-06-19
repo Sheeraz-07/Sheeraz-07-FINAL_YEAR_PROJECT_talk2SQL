@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -11,25 +11,25 @@ import {
   BarChart3,
   Database,
   Settings,
-  Bell,
   HelpCircle,
   Users,
   Shield,
   Activity,
-  ChevronLeft,
-  ChevronRight,
-  LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
   Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { canAccessAdmin } from '@/lib/rbac';
+import { useDashboardStore } from '@/stores/dashboardStore';
+import { useAnalyticsStore } from '@/stores/analyticsStore';
 
 interface SidebarProps {
   isCollapsed: boolean;
   onToggle: () => void;
+  onNavClick?: () => void;
 }
 
 const mainNavItems = [
@@ -48,15 +48,22 @@ const adminNavItems = [
 ];
 
 const bottomNavItems = [
-  { icon: Bell, label: 'Notifications', path: '/notifications' },
   { icon: Settings, label: 'Settings', path: '/settings' },
   { icon: HelpCircle, label: 'Help', path: '/help' },
 ];
 
-export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
+export function Sidebar({ isCollapsed, onToggle, onNavClick }: SidebarProps) {
   const pathname = usePathname();
-  const { user, logout } = useAuthStore();
+  const router = useRouter();
+  const { user } = useAuthStore();
   const userCanAccessAdmin = canAccessAdmin(user?.role);
+
+  const handleLogoClick = () => {
+    useDashboardStore.getState().setHasLoadedInitial(false);
+    useAnalyticsStore.getState().setHasLoadedInitial(false);
+    if (onNavClick) onNavClick();
+    router.push('/dashboard');
+  };
 
   const NavItem = ({ icon: Icon, label, path }: { icon: React.ElementType; label: string; path: string }) => {
     const isActive = pathname === path || pathname.startsWith(path + '/');
@@ -64,24 +71,24 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     const content = (
       <Link
         href={path}
-        onClick={() => onToggle()}
+        onClick={onNavClick}
         className={cn(
-          'group flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
+          'group relative flex items-center gap-3 px-3 py-2 rounded-[8px] transition-all duration-200',
           isActive 
-            ? 'bg-primary/10 text-primary font-semibold shadow-[inset_3px_0_0_hsl(var(--primary))]' 
-            : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground hover:translate-x-1',
-          isCollapsed && 'justify-center px-2 shadow-none'
+            ? 'bg-secondary/60 text-foreground font-[500]' 
+            : 'text-muted-foreground hover:bg-secondary/40 hover:text-foreground',
+          isCollapsed && 'justify-center px-2'
         )}
       >
+        {isActive && !isCollapsed && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-primary" />
+        )}
         <Icon className={cn(
-          'h-5 w-5 flex-shrink-0 transition-all duration-300',
-          isActive ? 'text-primary' : 'group-hover:scale-110'
+          'h-[18px] w-[18px] flex-shrink-0 transition-colors',
+          isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
         )} />
         {!isCollapsed && (
-          <span className="text-sm truncate font-medium">{label}</span>
-        )}
-        {!isCollapsed && isActive && (
-          <div className="ml-auto h-2 w-2 rounded-full bg-accent-foreground animate-pulse" />
+          <span className="text-[13px] truncate">{label}</span>
         )}
       </Link>
     );
@@ -90,7 +97,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       return (
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>{content}</TooltipTrigger>
-          <TooltipContent side="right" className="font-medium">
+          <TooltipContent side="right" className="font-medium text-[12px] ml-2">
             {label}
           </TooltipContent>
         </Tooltip>
@@ -103,135 +110,79 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'z-[202] h-screen bg-background/40 backdrop-blur-3xl border-r border-border/30 transition-all duration-300 flex-shrink-0 shadow-lg',
-        isCollapsed ? 'w-[72px]' : 'w-64'
+        'z-30 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 flex-shrink-0 flex flex-col',
+        isCollapsed ? 'w-[72px]' : 'w-[280px]'
       )}
     >
-      <div className="flex flex-col h-full">
-        {/* Logo & Brand */}
-        <div className={cn(
-          'flex items-center h-16 px-4 border-b border-divider',
-          isCollapsed ? 'justify-center' : 'gap-3'
-        )}>
-          <div className="relative group">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Sparkles className="h-5 w-5 text-primary" />
-            </div>
+      {/* Header / Logo */}
+      <div className={cn(
+        'flex items-center h-16 border-b border-sidebar-border transition-all duration-300',
+        isCollapsed ? 'justify-center px-0' : 'px-6 justify-between'
+      )}>
+        <div 
+          className="flex items-center gap-3 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={handleLogoClick}
+        >
+          <div className="flex-shrink-0 w-8 h-8 rounded-[8px] bg-primary flex items-center justify-center shadow-sm">
+            <Sparkles className="h-4 w-4 text-primary-foreground" />
           </div>
           {!isCollapsed && (
-            <div className="flex flex-col animate-slide-right">
-              <span className="font-bold text-lg tracking-tight uppercase">Talk2SQL</span>
-            </div>
+            <span className="font-[700] text-[15px] tracking-tight truncate">Talk2SQL</span>
           )}
         </div>
+        {!isCollapsed && (
+          <Button variant="ghost" size="icon" onClick={onToggle} className="h-8 w-8 text-muted-foreground hover:text-foreground">
+            <PanelLeftClose className="h-[18px] w-[18px]" />
+          </Button>
+        )}
+      </div>
 
-        {/* Main Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+      {isCollapsed && (
+        <div className="flex justify-center mt-4">
+           <Button variant="ghost" size="icon" onClick={onToggle} className="h-8 w-8 text-muted-foreground hover:text-foreground">
+            <PanelLeftOpen className="h-[18px] w-[18px]" />
+          </Button>
+        </div>
+      )}
+
+      {/* Main Navigation */}
+      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
+        <div className="space-y-1">
           {!isCollapsed && (
             <div className="px-3 pb-2">
-              <span className="text-xs font-semibold text-default-400 uppercase tracking-wider">
-                Main Menu
+              <span className="text-[11px] font-[600] text-muted-foreground uppercase tracking-wider">
+                Overview
               </span>
             </div>
           )}
           {mainNavItems.map((item) => (
             <NavItem key={item.path} {...item} />
           ))}
+        </div>
 
-          {/* Admin Section */}
-          {userCanAccessAdmin && (
-            <>
-              <div className={cn(
-                'pt-6 pb-2',
-                isCollapsed ? 'border-t border-divider mt-4' : ''
-              )}>
-                {!isCollapsed && (
-                  <div className="px-3">
-                    <span className="text-xs font-semibold text-default-400 uppercase tracking-wider">
-                      Administration
-                    </span>
-                  </div>
-                )}
-              </div>
-              {adminNavItems.map((item) => (
-                <NavItem key={item.path} {...item} />
-              ))}
-            </>
-          )}
-
-          {/* Bottom Section */}
-          <div className={cn(
-            'pt-6',
-            isCollapsed ? 'border-t border-divider mt-4' : ''
-          )}>
+        {/* Admin Section */}
+        {userCanAccessAdmin && (
+          <div className="space-y-1">
             {!isCollapsed && (
               <div className="px-3 pb-2">
-                <span className="text-xs font-semibold text-default-400 uppercase tracking-wider">
-                  Support
+                <span className="text-[11px] font-[600] text-muted-foreground uppercase tracking-wider">
+                  Admin
                 </span>
               </div>
             )}
-            {bottomNavItems.map((item) => (
+            {adminNavItems.map((item) => (
               <NavItem key={item.path} {...item} />
             ))}
           </div>
-        </nav>
+        )}
+      </nav>
 
-        {/* User Profile */}
-        <div className="p-3 border-t border-divider">
-          <div className={cn(
-            'flex items-center gap-3 p-2 rounded-lg hover:bg-default-100 transition-colors group cursor-pointer',
-            isCollapsed && 'justify-center'
-          )}>
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={user?.avatar} />
-              <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                {user?.username?.charAt(0) || user?.name?.charAt(0) || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            {!isCollapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate">{user?.username || user?.name || 'User'}</p>
-                <p className="text-xs text-default-500 truncate">{user?.email || 'user@example.com'}</p>
-              </div>
-            )}
-            {!isCollapsed && (
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={logout} 
-                    className="h-8 w-8 hover:bg-danger/10 hover:text-danger transition-colors"
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="font-semibold">Sign out</TooltipContent>
-              </Tooltip>
-            )}
-          </div>
-        </div>
-
-        {/* Collapse Toggle */}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onToggle}
-          className={cn(
-            'absolute -right-3 top-20 h-6 w-6 rounded-full border border-divider bg-background shadow-sm',
-            'hover:bg-default-100 transition-colors',
-            'hidden lg:flex items-center justify-center'
-          )}
-        >
-          {isCollapsed ? (
-            <ChevronRight className="h-4 w-4 text-default-500" />
-          ) : (
-            <ChevronLeft className="h-4 w-4 text-default-500" />
-          )}
-        </Button>
+      {/* Bottom Navigation */}
+      <div className="p-3 border-t border-sidebar-border space-y-1 bg-sidebar">
+        {bottomNavItems.map((item) => (
+          <NavItem key={item.path} {...item} />
+        ))}
       </div>
     </aside>
   );
 }
-

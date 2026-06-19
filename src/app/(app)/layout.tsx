@@ -8,18 +8,18 @@ import { useAuthStore } from '@/stores/authStore';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 
 const pageTitles: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/query': 'Query',
+  '/dashboard': 'Dashboard Overview',
+  '/query': 'Natural Language Query',
   '/history': 'Query History',
-  '/reports': 'Reports',
-  '/analytics': 'Analytics',
-  '/settings': 'Settings',
+  '/reports': 'Generated Reports',
+  '/analytics': 'Performance Analytics',
+  '/settings': 'Account Settings',
   '/help': 'Help & Support',
   '/notifications': 'Notifications',
-  '/admin/databases': 'Databases',
-  '/admin/users': 'Users',
+  '/admin/databases': 'Database Management',
+  '/admin/users': 'User Management',
   '/admin/roles': 'Roles & Permissions',
-  '/admin/logs': 'Activity Logs',
+  '/admin/logs': 'System Activity Logs',
 };
 
 export default function AppLayout({
@@ -28,13 +28,28 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuthStore();
 
   const pageTitle = pageTitles[pathname] || 'Talk2SQL';
 
-  // Redirect to login if not authenticated (but wait for initialization)
+  useEffect(() => {
+    setMounted(true);
+    const stored = localStorage.getItem('talk2sql_sidebar_collapsed');
+    if (stored === 'true') {
+      setIsSidebarCollapsed(true);
+    }
+  }, []);
+
+  const handleSidebarToggle = () => {
+    const newState = !isSidebarCollapsed;
+    setIsSidebarCollapsed(newState);
+    localStorage.setItem('talk2sql_sidebar_collapsed', String(newState));
+  };
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
@@ -43,37 +58,44 @@ export default function AppLayout({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/20 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  if (!isAuthenticated) {
-    return null;
-  }
+  if (!isAuthenticated) return null;
 
   return (
-    <div className="flex h-screen overflow-hidden theme-gradient-bg">
-      {/* Mobile Sidebar (for small screens) */}
+    <div className="flex h-screen w-full bg-background overflow-hidden selection:bg-primary/20 selection:text-foreground">
+      
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block h-full">
+        {mounted && (
+          <Sidebar isCollapsed={isSidebarCollapsed} onToggle={handleSidebarToggle} />
+        )}
+      </div>
+
+      {/* Mobile Sidebar */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetContent side="left" className="p-0 w-64 border-r-0">
+        <SheetContent side="left" className="p-0 w-[280px] border-r-0 bg-sidebar">
           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-          <Sidebar isCollapsed={false} onToggle={() => setMobileMenuOpen(false)} />
+          <Sidebar 
+            isCollapsed={false} 
+            onToggle={() => setMobileMenuOpen(false)} 
+            onNavClick={() => setMobileMenuOpen(false)} 
+          />
         </SheetContent>
       </Sheet>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col relative overflow-hidden">
+      {/* Main Content Area */}
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative">
         <Header
           title={pageTitle}
           onMobileMenuClick={() => setMobileMenuOpen(true)}
         />
-        <main className="flex-1 overflow-y-auto transition-[padding-top] duration-300 ease-out">
-          <div className="container mx-auto px-4 md:px-6 lg:px-8 py-6 max-w-7xl">
+        <main className="flex-1 overflow-y-auto w-full transition-all duration-300">
+          <div className="mx-auto w-full max-w-[1600px] px-4 md:px-8 lg:px-12 py-8">
             <div className="animate-fade-in">
               {children}
             </div>
@@ -83,4 +105,3 @@ export default function AppLayout({
     </div>
   );
 }
-

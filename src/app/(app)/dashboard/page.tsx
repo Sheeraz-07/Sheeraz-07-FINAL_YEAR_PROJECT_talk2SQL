@@ -218,10 +218,7 @@ export default function DashboardPage() {
               {currentDate}
             </p>
           </div>
-          <Button
-            asChild
-            className="rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 px-6 py-6 text-white border-0 hover:scale-105"
-          >
+          <Button asChild className="px-5">
             <Link href="/reports">
               <ArrowUpRight className="h-4 w-4 mr-2" />
               View Reports
@@ -303,9 +300,9 @@ export default function DashboardPage() {
         {/* Charts and Recent Queries Row */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sales by Category Chart */}
-          <Card className="col-span-1 lg:col-span-2 shadow-premium hover:shadow-premium-hover transition-all duration-300 rounded-2xl overflow-hidden h-[315px] animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2 bg-gradient-to-r from-transparent to-indigo-50/50 dark:to-indigo-950/30">
-              <CardTitle className="text-lg font-bold">
+          <Card className="col-span-1 lg:col-span-2 h-[315px] animate-slide-up" style={{ animationDelay: '0.1s' }}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-[14px] font-[600]">
                 Weekly Sales by Category
               </CardTitle>
               <Button

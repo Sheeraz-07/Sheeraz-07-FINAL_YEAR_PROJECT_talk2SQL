@@ -14,6 +14,17 @@ import {
   rejectUserSignup,
 } from '@/app/admin/actions';
 import { getCurrentUser } from '@/lib/auth';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default async function UsersPage({
   searchParams,
@@ -173,7 +184,7 @@ export default async function UsersPage({
                     <td className="py-4 px-6">
                       <div className="flex justify-end gap-2 opacity-100 sm:opacity-40 sm:group-hover:opacity-100 transition-opacity">
                         {/* Approve / Reject for Pending Users */}
-                        {user.status === 'pending' && currentUser?.role === 'super_admin' ? (
+                        {user.status === 'pending' && (currentUser?.role === 'super_admin' || currentUser?.role === 'admin') ? (
                           <>
                             <form action={async () => {
                               'use server';
@@ -196,15 +207,31 @@ export default async function UsersPage({
 
                         {/* Role Management */}
                         {currentUser?.role === 'super_admin' && user.role === 'user' && user.status === 'approved' ? (
-                          <form action={async () => {
-                            'use server';
-                            await promoteUserToAdmin(user.user_id);
-                          }}>
-                            <Button variant="outline" size="sm" className="h-8 shadow-sm">
-                              <UserCog className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                              Make Admin
-                            </Button>
-                          </form>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="h-8 shadow-sm">
+                                <UserCog className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                                Make Admin
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Promote to Admin?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will grant {user.username || user.email} full administrative privileges. Are you sure you want to continue?
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <form action={async () => {
+                                  'use server';
+                                  await promoteUserToAdmin(user.user_id);
+                                }}>
+                                  <AlertDialogAction type="submit">Yes, Make Admin</AlertDialogAction>
+                                </form>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         ) : currentUser?.role === 'super_admin' && user.role === 'admin' && user.status === 'approved' ? (
                           <form action={async () => {
                             'use server';
@@ -219,14 +246,30 @@ export default async function UsersPage({
 
                         {/* Delete Account - Hidden for super_admin and self */}
                         {user.role !== 'super_admin' && user.user_id !== currentUser?.user_id && (
-                          <form action={async () => {
-                            'use server';
-                            await deleteUserAccount(user.user_id);
-                          }}>
-                            <Button variant="outline" size="sm" className="h-8 text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20 shadow-sm">
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </form>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="h-8 text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20 shadow-sm">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete User Account?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This action cannot be undone. This will permanently delete the account for {user.username || user.email} and completely remove their data from the servers.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <form action={async () => {
+                                  'use server';
+                                  await deleteUserAccount(user.user_id);
+                                }}>
+                                  <AlertDialogAction type="submit" className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete Account</AlertDialogAction>
+                                </form>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         )}
                       </div>
                     </td>

@@ -14,10 +14,21 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from 'sonner';
 import { signUpAction } from '@/app/actions';
 
+const EMAIL_REGEX = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+const NAME_REGEX = /^[a-zA-Z\s\-']+$/;
+
 const registerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Please enter a valid email'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  name: z.string()
+    .min(2, 'Name must be at least 2 characters')
+    .max(50, 'Name cannot exceed 50 characters')
+    .regex(NAME_REGEX, 'Name can only contain letters, spaces, hyphens, and apostrophes')
+    .trim(),
+  email: z.string()
+    .regex(EMAIL_REGEX, 'Please enter a valid email address')
+    .max(100, 'Email cannot exceed 100 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(64, 'Password cannot exceed 64 characters'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -33,6 +44,7 @@ export default function RegisterPage() {
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
+    mode: 'onChange',
   });
 
   const onSubmit = async (data: RegisterForm) => {
