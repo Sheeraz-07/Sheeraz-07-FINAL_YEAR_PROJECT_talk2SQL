@@ -20,7 +20,7 @@ import { analyzeDataForReport } from '@/lib/report-generator-advanced';
 import { generateReportMetadata } from '@/lib/report-metadata-generator';
 
 interface ReportGeneratorProps {
-  onReportGenerated?: (report: Report) => void;
+  onReportGenerated?: (report: Report) => Promise<void> | void;
   isGenerating?: boolean;
 }
 
@@ -170,11 +170,11 @@ export function ReportGenerator({ onReportGenerated, isGenerating = false }: Rep
         tags: [metadata.reportType],
       };
 
-      onReportGenerated?.(generatedReport);
+      await onReportGenerated?.(generatedReport);
       setIsOpen(false);
       resetForm();
       toast.dismiss();
-      toast.success(`✅ Report generated! ${generatedReport.rowCount} records analyzed.`);
+      toast.success(`✅ Report generated and saved! ${generatedReport.rowCount} records analyzed.`);
     } catch (err) {
       toast.dismiss();
       const message = err instanceof Error ? err.message : 'Failed to generate report';

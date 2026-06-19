@@ -43,6 +43,16 @@ interface DataTableProps {
 }
 
 export function DataTable({ data, columns, className }: DataTableProps) {
+  const formatValue = (val: unknown) => {
+    if (val === null || val === undefined) return '-';
+    const str = String(val);
+    // If it looks like a full timestamp (ISO or SQL), extract just the date part YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}/.test(str)) {
+      return str.substring(0, 10);
+    }
+    return str;
+  };
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
@@ -229,7 +239,7 @@ export function DataTable({ data, columns, className }: DataTableProps) {
                         "font-medium text-slate-900 dark:text-slate-100",
                         isNumber && "text-right tabular-nums"
                       )}>
-                        {String(value ?? '-')}
+                        {formatValue(value)}
                       </TableCell>
                     );
                   })}

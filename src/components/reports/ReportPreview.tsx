@@ -71,6 +71,16 @@ function renderTableData(columns: string[] | undefined, data: Record<string, unk
   if (!columns || !data || data.length === 0) return null;
   const displayColumns = columns;
 
+  const formatValue = (val: unknown) => {
+    if (val === null || val === undefined) return '-';
+    const str = String(val);
+    // If it looks like a full timestamp (ISO or SQL), extract just the date part YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}/.test(str)) {
+      return str.substring(0, 10);
+    }
+    return str;
+  };
+
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950/50">
       <table className="w-full text-xs table-fixed">
@@ -91,7 +101,7 @@ function renderTableData(columns: string[] | undefined, data: Record<string, unk
             >
               {displayColumns.map((col) => (
                 <td key={col} className="px-3 py-2 text-foreground whitespace-normal break-words align-top">
-                  {String(row[col] ?? '-')}
+                  {formatValue(row[col])}
                 </td>
               ))}
             </tr>

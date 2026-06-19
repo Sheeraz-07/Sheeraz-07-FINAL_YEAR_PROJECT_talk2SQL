@@ -98,6 +98,28 @@ function identifyCategorialColumns(data: Record<string, unknown>[], columns: str
 }
 
 /**
+ * Formats a number with K or M suffix for large numbers
+ */
+function formatNumberShort(num: number): string {
+  if (Math.abs(num) >= 1_000_000) {
+    return (num / 1_000_000).toFixed(1) + 'M';
+  } else if (Math.abs(num) >= 1_000) {
+    return (num / 1_000).toFixed(1) + 'K';
+  }
+  return num.toFixed(2).replace(/\.00$/, '');
+}
+
+/**
+ * Converts a string to Title Case
+ */
+function toTitleCase(str: string): string {
+  return str.replace(/_/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
+/**
  * Generates metrics section with key performance indicators
  */
 function generateMetricsSection(data: Record<string, unknown>[], numericColumns: string[]): ReportSection | null {
@@ -107,28 +129,61 @@ function generateMetricsSection(data: Record<string, unknown>[], numericColumns:
     const values = data
       .map((row) => {
         const val = row[col];
-        return typeof val === 'number' ? val : parseFloat(val);
+        return typeof val === 'number' ? val : parseFloat(String(val));
       })
       .filter((val) => !isNaN(val));
 
     if (values.length === 0) return null;
 
-    const average = values.reduce((a, b) => a + b, 0) / values.length;
-    const max = Math.max(...values);
-    const min = Math.min(...values);
+    const colLower = col.toLowerCase();
+    const isSumType = /(total|revenue|sales|amount|qty|quantity|profit|cost|count)/i.test(colLower);
+    
+    let aggregateValue = 0;
+    let labelPrefix = '';
+
+    if (isSumType) {
+      aggregateValue = values.reduce((a, b) => a + b, 0);
+      labelPrefix = 'Total';
+    } else {
+      aggregateValue = values.reduce((a, b) => a + b, 0) / values.length;
+      labelPrefix = 'Avg';
+    }
+
+    const cleanColName = toTitleCase(col);
+    // Avoid redundancies like "Total Total Revenue"
+    let finalLabel = cleanColName;
+    if (!cleanColName.toLowerCase().includes(labelPrefix.toLowerCase())) {
+      finalLabel = `${labelPrefix} ${cleanColName}`;
+    }
+
+    const formattedValue = formatNumberShort(aggregateValue);
 
     // Calculate trend (simplified - comparing first half to second half)
     const midpoint = Math.floor(values.length / 2);
-    const firstHalf = values.slice(0, midpoint);
-    const secondHalf = values.slice(midpoint);
-    const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
-    const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
-    const trendPercent = ((secondAvg - firstAvg) / firstAvg) * 100;
+    let trendPercent = 0;
+    
+    if (midpoint > 0 && values.length > 1) {
+      const firstHalf = values.slice(0, midpoint);
+      const secondHalf = values.slice(midpoint);
+      
+      const firstAgg = isSumType 
+        ? firstHalf.reduce((a, b) => a + b, 0) 
+        : firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+        
+      const secondAgg = isSumType 
+        ? secondHalf.reduce((a, b) => a + b, 0) 
+        : secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+
+      if (firstAgg !== 0) {
+        trendPercent = ((secondAgg - firstAgg) / Math.abs(firstAgg)) * 100;
+      }
+    }
+
     const trend = trendPercent > 5 ? 'up' : trendPercent < -5 ? 'down' : 'neutral';
 
     return {
-      label: col.replace(/_/g, ' ').toUpperCase(),
-      value: average.toFixed(2),
+      label: finalLabel,
+      value: formattedValue,
       trend: trend as 'up' | 'down' | 'neutral',
       trendValue: Math.abs(trendPercent).toFixed(1),
     };
