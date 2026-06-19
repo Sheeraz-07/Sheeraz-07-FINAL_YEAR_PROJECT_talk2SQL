@@ -50,6 +50,142 @@ _BLOCKED_PATTERNS: list[tuple[re.Pattern, str]] = [
     (re.compile(r"\binformation_schema\b", re.IGNORECASE), "Access to information_schema is not allowed"),
 ]
 
+# _BLOCKED_PATTERNS.extend([
+
+#     # ---------------------------------------
+#     # UNION attacks
+#     # ---------------------------------------
+#     (re.compile(r"\bUNION\b", re.IGNORECASE), "UNION is not allowed"),
+#     (re.compile(r"\bUNION\s+ALL\b", re.IGNORECASE), "UNION ALL is not allowed"),
+
+#     # ---------------------------------------
+#     # Boolean Injection
+#     # ---------------------------------------
+#     (re.compile(r"\bOR\s+\d+\s*=\s*\d+", re.IGNORECASE), "Boolean expressions are not allowed"),
+#     (re.compile(r"\bAND\s+\d+\s*=\s*\d+", re.IGNORECASE), "Boolean expressions are not allowed"),
+#     (re.compile(r"\bOR\s+TRUE\b", re.IGNORECASE), "Boolean expressions are not allowed"),
+#     (re.compile(r"\bAND\s+TRUE\b", re.IGNORECASE), "Boolean expressions are not allowed"),
+#     (re.compile(r"\bOR\s+FALSE\b", re.IGNORECASE), "Boolean expressions are not allowed"),
+
+#     # ---------------------------------------
+#     # Time-based Injection
+#     # ---------------------------------------
+#     (re.compile(r"\bSLEEP\s*\(", re.IGNORECASE), "SLEEP() is not allowed"),
+#     (re.compile(r"\bPG_SLEEP\s*\(", re.IGNORECASE), "PG_SLEEP() is not allowed"),
+#     (re.compile(r"\bBENCHMARK\s*\(", re.IGNORECASE), "BENCHMARK() is not allowed"),
+#     (re.compile(r"\bWAITFOR\b", re.IGNORECASE), "WAITFOR is not allowed"),
+#     (re.compile(r"\bDELAY\b", re.IGNORECASE), "DELAY is not allowed"),
+
+#     # ---------------------------------------
+#     # Conditional execution
+#     # ---------------------------------------
+#     (re.compile(r"\bCASE\b", re.IGNORECASE), "CASE expressions are not allowed"),
+#     (re.compile(r"\bIF\b", re.IGNORECASE), "IF expressions are not allowed"),
+#     (re.compile(r"\bIIF\b", re.IGNORECASE), "IIF expressions are not allowed"),
+
+#     # ---------------------------------------
+#     # Metadata enumeration
+#     # ---------------------------------------
+#     (re.compile(r"\bSYSOBJECTS\b", re.IGNORECASE), "System tables are not allowed"),
+#     (re.compile(r"\bSYSCOLUMNS\b", re.IGNORECASE), "System tables are not allowed"),
+#     (re.compile(r"\bPG_CATALOG\b", re.IGNORECASE), "System catalog access is not allowed"),
+#     (re.compile(r"\bMYSQL\b", re.IGNORECASE), "System database access is not allowed"),
+
+#     # ---------------------------------------
+#     # Dangerous Functions
+#     # ---------------------------------------
+#     (re.compile(r"\bLOAD_FILE\b", re.IGNORECASE), "LOAD_FILE() is not allowed"),
+#     (re.compile(r"\bINTO\s+OUTFILE\b", re.IGNORECASE), "OUTFILE is not allowed"),
+#     (re.compile(r"\bINTO\s+DUMPFILE\b", re.IGNORECASE), "DUMPFILE is not allowed"),
+#     (re.compile(r"\bXP_CMDSHELL\b", re.IGNORECASE), "xp_cmdshell is not allowed"),
+#     (re.compile(r"\bOPENROWSET\b", re.IGNORECASE), "OPENROWSET is not allowed"),
+#     (re.compile(r"\bOPENDATASOURCE\b", re.IGNORECASE), "OPENDATASOURCE is not allowed"),
+
+#     # ---------------------------------------
+#     # Encoding tricks
+#     # ---------------------------------------
+#     (re.compile(r"%27", re.IGNORECASE), "Encoded quotes are not allowed"),
+#     (re.compile(r"%22", re.IGNORECASE), "Encoded quotes are not allowed"),
+#     (re.compile(r"%3B", re.IGNORECASE), "Encoded semicolons are not allowed"),
+#     (re.compile(r"%2D%2D", re.IGNORECASE), "Encoded SQL comments are not allowed"),
+
+#     # ---------------------------------------
+#     # Hex strings
+#     # ---------------------------------------
+#     (re.compile(r"\b0x[0-9a-f]+\b", re.IGNORECASE), "Hex encoded literals are not allowed"),
+
+#     # ---------------------------------------
+#     # Multiple statements
+#     # ---------------------------------------
+#     (re.compile(r";", re.IGNORECASE), "Multiple statements are not allowed"),
+
+#     # ---------------------------------------
+#     # Comments
+#     # ---------------------------------------
+#     (re.compile(r"#", re.IGNORECASE), "SQL comments are not allowed"),
+
+#     # ---------------------------------------
+#     # EXEC variants
+#     # ---------------------------------------
+#     (re.compile(r"\bEXEC\b", re.IGNORECASE), "EXEC is not allowed"),
+#     (re.compile(r"\bSP_EXECUTESQL\b", re.IGNORECASE), "sp_executesql is not allowed"),
+
+#     # ---------------------------------------
+#     # File/System access
+#     # ---------------------------------------
+#     (re.compile(r"\bCOPY\b", re.IGNORECASE), "COPY is not allowed"),
+#     (re.compile(r"\bPROGRAM\b", re.IGNORECASE), "PROGRAM is not allowed"),
+
+#     # ---------------------------------------
+#     # XML / JSON abuse
+#     # ---------------------------------------
+#     (re.compile(r"\bEXTRACTVALUE\b", re.IGNORECASE), "EXTRACTVALUE is not allowed"),
+#     (re.compile(r"\bUPDATEXML\b", re.IGNORECASE), "UPDATEXML is not allowed"),
+
+#     # ---------------------------------------
+#     # Locking
+#     # ---------------------------------------
+#     (re.compile(r"\bLOCK\b", re.IGNORECASE), "LOCK is not allowed"),
+#     (re.compile(r"\bUNLOCK\b", re.IGNORECASE), "UNLOCK is not allowed"),
+
+#     # ---------------------------------------
+#     # Cursor abuse
+#     # ---------------------------------------
+#     (re.compile(r"\bDECLARE\b", re.IGNORECASE), "DECLARE is not allowed"),
+#     (re.compile(r"\bCURSOR\b", re.IGNORECASE), "CURSOR is not allowed"),
+#     (re.compile(r"\bFETCH\b", re.IGNORECASE), "FETCH is not allowed"),
+
+#     # ---------------------------------------
+#     # Transactions
+#     # ---------------------------------------
+#     (re.compile(r"\bBEGIN\b", re.IGNORECASE), "BEGIN is not allowed"),
+#     (re.compile(r"\bCOMMIT\b", re.IGNORECASE), "COMMIT is not allowed"),
+#     (re.compile(r"\bROLLBACK\b", re.IGNORECASE), "ROLLBACK is not allowed"),
+
+#     # ---------------------------------------
+#     # User / Version enumeration
+#     # ---------------------------------------
+#     (re.compile(r"\bVERSION\s*\(", re.IGNORECASE), "VERSION() is not allowed"),
+#     (re.compile(r"\bUSER\s*\(", re.IGNORECASE), "USER() is not allowed"),
+#     (re.compile(r"\bCURRENT_USER\b", re.IGNORECASE), "CURRENT_USER is not allowed"),
+#     (re.compile(r"\bSESSION_USER\b", re.IGNORECASE), "SESSION_USER is not allowed"),
+#     (re.compile(r"\bSYSTEM_USER\b", re.IGNORECASE), "SYSTEM_USER is not allowed"),
+#     (re.compile(r"\bDATABASE\s*\(", re.IGNORECASE), "DATABASE() is not allowed"),
+
+#     # ---------------------------------------
+#     # Dangerous operators
+#     # ---------------------------------------
+#     (re.compile(r"\|\|", re.IGNORECASE), "Concatenation operator is not allowed"),
+
+#     # ---------------------------------------
+#     # Information gathering
+#     # ---------------------------------------
+#     (re.compile(r"\bSCHEMA_NAME\b", re.IGNORECASE), "Schema access is not allowed"),
+#     (re.compile(r"\bTABLE_NAME\b", re.IGNORECASE), "Table enumeration is not allowed"),
+#     (re.compile(r"\bCOLUMN_NAME\b", re.IGNORECASE), "Column enumeration is not allowed"),
+
+# ])
+
 _BLOCKED_PATTERNS_SUPABASE: list[tuple[re.Pattern, str]] = [
     (re.compile(r"\bpg_", re.IGNORECASE), "Access to pg_ system catalogs is not allowed"),
 ]

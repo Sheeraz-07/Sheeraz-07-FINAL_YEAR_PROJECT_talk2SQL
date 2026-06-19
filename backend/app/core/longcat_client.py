@@ -86,28 +86,3 @@ async def chat_completion(
     return content.strip()
 
 
-async def generate_embedding(text: str) -> list[float]:
-    """
-    Generate a vector embedding for the given text using the configured
-    embedding model.
-
-    Parameters
-    ----------
-    text : str
-        The text to embed.
-
-    Returns
-    -------
-    list[float]
-        The embedding vector.
-    """
-    settings = get_settings()
-    client = _get_client()
-
-    response = await client.embeddings.create(
-        model=settings.EMBEDDING_MODEL,
-        input=text,
-        dimensions=settings.EMBEDDING_DIMENSIONS,
-    )
-
-    return response.data[0].embedding

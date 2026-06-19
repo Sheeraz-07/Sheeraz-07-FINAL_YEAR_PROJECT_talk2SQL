@@ -1,15 +1,13 @@
 """
 schema_retriever.py — Runtime schema retrieval via direct database introspection.
 
-SIMPLIFIED MODE: Instead of using vector embeddings, this directly queries
-the database information_schema to get all table and column definitions.
+SIMPLIFIED MODE: This directly queries the database information_schema to get 
+all table and column definitions.
 
 This approach:
-  - Works immediately without needing embeddings
-  - Returns all tables (not filtered by relevance)
+  - Works immediately
+  - Returns all tables
   - Simpler and more reliable for initial deployment
-  
-Vector search can be added later for optimization.
 """
 
 from __future__ import annotations
@@ -420,32 +418,3 @@ def _extract_sql_server_raw_schema_sync() -> tuple[list[str], list[dict], list[d
             conn.close()
 
 
-async def retrieve_user_memory_context(
-    user_id: str,
-    query: str,
-    top_k: int = 3,
-) -> list[dict]:
-    """
-    Retrieve relevant behavioural memory vectors for a user.
-    
-    SIMPLIFIED: Returns empty list since we're not using embeddings yet.
-
-    Parameters
-    ----------
-    user_id : str
-        The user whose memory to search.
-    query : str
-        The current query.
-    top_k : int
-        Number of memory entries to retrieve.
-
-    Returns
-    -------
-    list[dict]
-        Empty list in simplified mode.
-    """
-    logger.debug(
-        "Memory retrieval skipped (simplified mode) for user %s",
-        user_id,
-    )
-    return []

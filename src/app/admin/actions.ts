@@ -1,6 +1,6 @@
 'use server';
 
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient, createServerAdminClient } from '@/lib/supabase/server';
 import { getCurrentUser, requireRole } from '@/lib/auth';
 import { createNotification } from '@/lib/notifications';
 import { revalidatePath } from 'next/cache';
@@ -47,7 +47,7 @@ async function sendApprovalEmail(email: string, status: 'approved' | 'rejected')
 
 export async function getPendingSignupRequests(): Promise<SignupRequest[]> {
   await requireRole(['admin', 'super_admin']);
-  const supabase = await createServerSupabaseClient();
+  const supabase = createServerAdminClient();
 
   const { data, error } = await supabase
     .from('signup_requests')
@@ -181,7 +181,7 @@ export async function rejectUserSignup(
 
 export async function getAllUsers() {
   await requireRole(['admin', 'super_admin']);
-  const supabase = await createServerSupabaseClient();
+  const supabase = createServerAdminClient();
 
   const { data, error } = await supabase
     .from('users')

@@ -6,8 +6,7 @@ Startup tasks:
   2. Mount CORS middleware (for Next.js frontend at localhost:3000)
   3. Include API routers
   
-SIMPLIFIED MODE: Uses direct database schema introspection instead of
-vector embeddings, allowing the system to work without embedding API.
+SIMPLIFIED MODE: Uses direct database schema introspection.
 
 Shutdown tasks:
   1. Dispose SQLAlchemy engine pool
@@ -47,11 +46,7 @@ async def lifespan(app: FastAPI):
     """Application lifespan handler for startup and shutdown."""
     settings = get_settings()
     logger.info("Starting %s v%s (SIMPLIFIED MODE - Direct Schema Retrieval)", settings.APP_TITLE, settings.APP_VERSION)
-
-    # SIMPLIFIED MODE: Skip vector embeddings setup since we're using direct schema retrieval
-    # Vector embeddings and schema ingestion can be enabled later for optimization
-    logger.info("Using direct database schema retrieval (no embeddings required)")
-
+    logger.info("Using direct database schema retrieval")
     yield
 
     # Shutdown

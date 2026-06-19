@@ -1,8 +1,8 @@
 """
 supabase.py — Async SQLAlchemy engine for Supabase (PostgreSQL).
 
-Provides a singleton async engine used by the executor, user_profile,
-vector_store, and schema modules.  Uses ``asyncpg`` as the driver.
+Provides a singleton async engine used by the executor and schema modules.
+Uses ``asyncpg`` as the driver.
 
 No ORM models are used anywhere — only SQLAlchemy Core (``text()``).
 """

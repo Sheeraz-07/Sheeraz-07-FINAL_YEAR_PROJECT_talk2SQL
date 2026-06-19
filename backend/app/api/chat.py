@@ -4,14 +4,11 @@ chat.py — Main API router for the /query endpoint.
 This is the orchestrator that ties together every module in the pipeline:
 
   1. Intent Guard       → reject out-of-domain queries
-  2. Session Memory     → load / update conversation context
-  3. User Profile       → load long-term personalisation hints
-  4. Schema Retrieval   → vector search for relevant tables
-  5. SQL Agent          → LLM-based SQL generation
-  6. SQL Validator      → safety checks before execution
-  7. Executor           → run validated SQL on Supabase
-  8. Explanation         → LLM-generated result summary
-  9. Memory Updater     → persist learnings for future queries
+  2. Schema Retrieval   → direct database schema retrieval
+  3. SQL Agent          → LLM-based SQL generation
+  4. SQL Validator      → safety checks before execution
+  5. Executor           → run validated SQL on Supabase
+  6. Explanation         → LLM-generated result summary
 
 The endpoint contract matches what the Next.js frontend expects.
 """
@@ -122,7 +119,6 @@ async def handle_query(
       5. Execution → run on Supabase
       6. Explanation → simple result summary
 
-    Memory and personalization features are disabled for now.
     """
     request_id = str(uuid.uuid4())
     overall_start = time.perf_counter()
@@ -280,7 +276,7 @@ async def handle_query(
         row_count=row_count,
         execution_time=execution_time,
         explanation=explanation,
-        personalization_used=False,  # Disabled for now
+        personalization_used=False,
         database=connected_database,
         sql_dialect=sql_dialect,
         visualization=visualization,
@@ -294,8 +290,7 @@ async def refresh_schema(request: SchemaRefreshRequest) -> dict[str, Any]:
     return refreshed
 
 
-# ── Helper functions are removed for simplified version ───────────────
-# Memory and session features will be added back in future iterations
+# ── Helper functions ────────────────────────────────────────────────────
 
 
 def _normalize_database(database: str | None) -> str:

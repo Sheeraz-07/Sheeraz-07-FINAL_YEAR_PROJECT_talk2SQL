@@ -57,18 +57,10 @@ class Settings(BaseSettings):
     LONGCAT_TEMPERATURE: float = 0.0
     LONGCAT_MAX_TOKENS: int = 1024
 
-    # ── Embedding model (reserved for optional memory features) ─────────
-    EMBEDDING_MODEL: str = "text-embedding-3-small"
-    EMBEDDING_DIMENSIONS: int = 1536
-
     # ── JWT / Auth ──────────────────────────────────────────────────────
     JWT_SECRET: str = "super-secret-change-me"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRY_MINUTES: int = 60 * 24  # 24 hours
-
-    # ── Session memory ──────────────────────────────────────────────────
-    SESSION_MAX_TURNS: int = 20
-
     @property
     def cors_origin_list(self) -> list[str]:
         """Parse comma-separated CORS origins into a list."""
