@@ -21,6 +21,7 @@ interface QueryState {
   clearResults: () => void;
   toggleFavorite: (id: string) => void;
   deleteFromHistory: (id: string) => void;
+  hydrateHistory: () => Promise<void>;
 }
 
 const mockHistory: QueryHistory[] = [
@@ -76,8 +77,21 @@ export const useQueryStore = create<QueryState>()(
       error: null,
       language: 'en',
       selectedDatabase: 'supabase',
-      history: mockHistory,
-      savedQueries: mockHistory.filter((q) => q.isFavorite),
+      history: [], // We start empty and hydrate from Supabase
+      savedQueries: [],
+
+      hydrateHistory: async () => {
+        try {
+          const { fetchQueryHistory } = await import('@/app/(app)/history/actions');
+          const serverHistory = await fetchQueryHistory();
+          set({
+            history: serverHistory,
+            savedQueries: serverHistory.filter((q) => q.isFavorite),
+          });
+        } catch (error) {
+          console.error('Failed to hydrate query history:', error);
+        }
+      },
 
       setQuery: (query) => set({ currentQuery: query }),
       setLanguage: (lang) => set({ language: lang }),
@@ -159,6 +173,7 @@ export const useQueryStore = create<QueryState>()(
             createdAt: result.createdAt,
             isFavorite: false,
             status: 'success',
+            user_id: String(user?.user_id || ''),
           };
 
           set((state) => ({
@@ -167,6 +182,13 @@ export const useQueryStore = create<QueryState>()(
             loadingStep: 0,
             history: [newHistoryItem, ...state.history],
           }));
+
+          // Async save to Supabase
+          if (user?.user_id) {
+            import('@/app/(app)/history/actions').then(({ saveQueryHistory }) => {
+              saveQueryHistory(newHistoryItem, user.user_id).catch(console.error);
+            });
+          }
         } catch (err) {
           console.error('Backend query failed:', err);
           const message = err instanceof Error ? err.message : 'Unable to reach backend';
@@ -182,6 +204,9 @@ export const useQueryStore = create<QueryState>()(
       clearResults: () => set({ results: null, currentQuery: '', error: null }),
 
       toggleFavorite: (id) => {
+        const historyItem = get().history.find((q) => q.id === id);
+        const newIsFavorite = !historyItem?.isFavorite;
+
         set((state) => ({
           history: state.history.map((q) =>
             q.id === id ? { ...q, isFavorite: !q.isFavorite } : q
@@ -190,6 +215,11 @@ export const useQueryStore = create<QueryState>()(
             q.id === id ? !q.isFavorite : q.isFavorite
           ),
         }));
+
+        // Async toggle in Supabase
+        import('@/app/(app)/history/actions').then(({ toggleQueryFavorite }) => {
+          toggleQueryFavorite(id, newIsFavorite).catch(console.error);
+        });
       },
 
       deleteFromHistory: (id) => {
@@ -197,6 +227,11 @@ export const useQueryStore = create<QueryState>()(
           history: state.history.filter((q) => q.id !== id),
           savedQueries: state.savedQueries.filter((q) => q.id !== id),
         }));
+
+        // Async delete from Supabase
+        import('@/app/(app)/history/actions').then(({ deleteQueryHistory }) => {
+          deleteQueryHistory(id).catch(console.error);
+        });
       },
     }),
     {

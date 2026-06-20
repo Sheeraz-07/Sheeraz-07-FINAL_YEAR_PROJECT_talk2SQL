@@ -2,6 +2,8 @@ import { Shield } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getAllUsers, getPendingSignupRequests } from '@/app/admin/actions';
 
+export const dynamic = 'force-dynamic';
+
 export default async function SuperAdminPage() {
   const [users, pending] = await Promise.all([getAllUsers(), getPendingSignupRequests()]);
   return (

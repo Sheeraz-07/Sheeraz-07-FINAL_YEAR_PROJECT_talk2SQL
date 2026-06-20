@@ -237,7 +237,7 @@ export function DataTable({ data, columns, className }: DataTableProps) {
                     return (
                       <TableCell key={column} className={cn(
                         "font-medium text-slate-900 dark:text-slate-100",
-                        isNumber && "text-right tabular-nums"
+                        isNumber && "tabular-nums"
                       )}>
                         {formatValue(value)}
                       </TableCell>

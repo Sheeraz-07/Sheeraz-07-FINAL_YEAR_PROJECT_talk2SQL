@@ -192,7 +192,7 @@ async function buildPdfWithHtml2PdfFallback(report: Report, layout: LayoutStyle)
       },
       logging: false,
       autoPaging: true,
-    };
+    } as any;
 
     const blob = await new Promise<Blob>((resolve, reject) => {
       html2pdf()
@@ -404,7 +404,7 @@ function renderSection(section: ReportSection, layout: LayoutStyle): string {
   if ((section.type === 'chart' || section.type === 'visualization') && section.chartConfig) {
     content = `
       <div class="chart-container">
-        Chart: ${escapeHtml(section.chartConfig.type || 'Chart')} visualization
+        Chart: ${escapeHtml((section.chartConfig.type as string) || 'Chart')} visualization
         <br />(Export to PDF to view)
       </div>
     `;

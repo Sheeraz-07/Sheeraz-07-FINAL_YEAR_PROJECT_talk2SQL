@@ -17,10 +17,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
 import { useCallback, useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
+import { useQueryStore } from '@/stores/queryStore';
 import { createClient } from '@/lib/supabase/client';
 import type { Notification } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { GlobalSearch } from './GlobalSearch';
 
 interface HeaderProps {
   title: string;
@@ -35,6 +37,7 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const loadNotifications = useCallback(async () => {
     try {
@@ -51,6 +54,7 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
   useEffect(() => {
     queueMicrotask(() => {
       void loadNotifications();
+      useQueryStore.getState().hydrateHistory();
     });
     const supabase = createClient();
     const channel = supabase
@@ -111,16 +115,21 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
       <div className="flex items-center gap-3">
         {/* Search */}
         <div className="relative hidden md:flex items-center">
-          <Search className={cn(
-            "absolute left-3 h-4 w-4 transition-colors",
-            searchFocused ? "text-primary" : "text-muted-foreground"
-          )} />
-          <Input
-            placeholder="Search..."
-            className="w-[240px] pl-9 pr-4 h-9 bg-secondary/50 border-transparent rounded-[8px] text-[13px] focus-visible:bg-background focus-visible:border-border focus-visible:ring-1 focus-visible:ring-primary transition-all duration-200"
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
-          />
+          <Button
+            variant="outline"
+            className={cn(
+              "relative h-9 w-[240px] justify-start rounded-[8px] bg-secondary/50 text-[13px] font-normal text-muted-foreground shadow-none border-transparent hover:bg-secondary hover:text-foreground transition-all duration-200",
+              searchFocused && "bg-background border-border ring-1 ring-primary text-foreground"
+            )}
+            onClick={() => setSearchOpen(true)}
+          >
+            <Search className="mr-2 h-4 w-4" />
+            <span className="hidden lg:inline-flex">Search...</span>
+            <span className="inline-flex lg:hidden">Search...</span>
+            <kbd className="pointer-events-none absolute right-2 top-[7px] hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+              <span className="text-xs">⌘</span>K
+            </kbd>
+          </Button>
         </div>
 
         {/* Theme Toggle */}
@@ -245,6 +254,7 @@ export function Header({ title, onMobileMenuClick }: HeaderProps) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      <GlobalSearch open={searchOpen} setOpen={setSearchOpen} />
     </header>
   );
 }

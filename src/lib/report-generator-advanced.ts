@@ -185,7 +185,7 @@ function generateMetricsSection(data: Record<string, unknown>[], numericColumns:
       label: finalLabel,
       value: formattedValue,
       trend: trend as 'up' | 'down' | 'neutral',
-      trendValue: Math.abs(trendPercent).toFixed(1),
+      trendValue: parseFloat(Math.abs(trendPercent).toFixed(1)),
     };
   });
 

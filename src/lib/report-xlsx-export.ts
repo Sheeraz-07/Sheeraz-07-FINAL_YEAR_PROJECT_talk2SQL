@@ -179,7 +179,7 @@ function createMetricsSheet(metrics: ReportSection['metrics']): any {
   metrics.forEach((metric) => {
     data.push([
       metric.label,
-      metric.value,
+      String(metric.value),
       metric.trend || 'neutral',
       metric.trendValue ? `${metric.trendValue}%` : '-',
     ]);

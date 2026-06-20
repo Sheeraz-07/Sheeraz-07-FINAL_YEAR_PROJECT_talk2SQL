@@ -44,8 +44,8 @@ export default function HistoryPage() {
   const [sortBy, setSortBy] = useState('recent');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const history = allHistory.filter((q) => !q.user_id || q.user_id === String(authUser?.user_id ?? 1));
-  const savedQueries = allSavedQueries.filter((q) => !q.user_id || q.user_id === String(authUser?.user_id ?? 1));
+  const history = allHistory.filter((q) => q.user_id === String(authUser?.user_id || ''));
+  const savedQueries = allSavedQueries.filter((q) => q.user_id === String(authUser?.user_id || ''));
 
   const filteredHistory = history.filter((query) => {
     const matchesSearch = query.naturalQuery.toLowerCase().includes(searchTerm.toLowerCase());

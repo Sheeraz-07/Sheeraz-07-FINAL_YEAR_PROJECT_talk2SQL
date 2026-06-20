@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { getReportsAction, getReportRawDataAction, deleteReportAction, saveReportAction } from './actions';
+import { getReportsAction, deleteReportAction, saveReportAction } from './actions';
 import { useQueryStore } from '@/stores/queryStore';
 import { useAuthStore } from '@/stores/authStore';
 import { Report, ReportType } from '@/types';
@@ -116,20 +116,9 @@ export default function ReportsPage() {
     if (reportCache[report.id]) {
       return reportCache[report.id];
     }
-
-    let rawData: Record<string, unknown>[] = [];
-    if (report.raw_data_url) {
-      const res = await getReportRawDataAction(report.id, report.raw_data_url);
-      if (res.success && res.rawData) {
-        rawData = res.rawData;
-      } else {
-        toast.error(`Could not load full raw data: ${res.error}`);
-      }
-    }
-
-    const fullReport = { ...report, rawData };
-    setReportCache((prev) => ({ ...prev, [report.id]: fullReport }));
-    return fullReport;
+    // Return report as-is. If it has no rawData (e.g. older report loaded from DB),
+    // it will just render without the table, which matches user expectations.
+    return report;
   };
 
   const handleReportGenerated = async (newReport: Report) => {
@@ -141,21 +130,20 @@ export default function ReportsPage() {
       return;
     }
 
-    toast.loading('Saving report to database...');
+    toast.loading('Saving report metadata to database...');
     const saveRes = await saveReportAction(newReport);
     toast.dismiss();
 
     if (!saveRes.success) {
-      toast.error(`Failed to save report: ${saveRes.error}`);
+      toast.error(`Failed to save report metadata: ${saveRes.error}`);
       return;
     }
 
+    // Keep full data in memory for the active session
     setReportCache((prev) => ({ ...prev, [newReport.id]: newReport }));
-    // Optimistic state update based on what the DB will have
-    const stored = toStoredReport(newReport);
-    // Add raw_data_url dynamically so we don't have to reload from DB instantly
-    stored.raw_data_url = `${authUser?.user_id}/${newReport.id}.json`;
-    setReports((prev) => [stored, ...prev]);
+    
+    // Optimistic state update with the FULL report so it can be downloaded during this session
+    setReports((prev) => [newReport, ...prev]);
 
     setIsGenerating(false);
     setGenerationStatus('success');
@@ -167,7 +155,7 @@ export default function ReportsPage() {
 
   const handleDeleteReport = async (report: Report) => {
     toast.loading('Deleting report...');
-    const res = await deleteReportAction(report.id, report.raw_data_url);
+    const res = await deleteReportAction(report.id, (report as any).raw_data_url);
     toast.dismiss();
 
     if (res.success) {
@@ -179,9 +167,7 @@ export default function ReportsPage() {
   };
 
   const handleViewReport = async (report: Report) => {
-    toast.loading('Loading report data...');
     const fullReport = await getFullReportAsync(report);
-    toast.dismiss();
     setActiveReport(fullReport);
     setIsViewOpen(true);
   };
@@ -192,7 +178,7 @@ export default function ReportsPage() {
     toast.dismiss();
 
     if (!fullReport.rawData || !fullReport.rawData.length) {
-      toast.error('This report has no data to export');
+      toast.error('Data not found. Raw data is only available during the active session when it is first generated.');
       return;
     }
 
@@ -244,9 +230,14 @@ export default function ReportsPage() {
       const fullReport = await getFullReportAsync(report);
       toast.dismiss();
 
-      toast.loading('Generating PDF... This may take a moment.');
+      if (!fullReport.rawData || !fullReport.rawData.length) {
+        toast.error('Data not found. PDF export requires raw data, which is only available during the active session.');
+        return;
+      }
+
+      const toastId = toast.loading('Generating PDF... This may take a moment.');
       await exportReportToPDF(fullReport, fullReport.metadata?.suggestedLayout || 'modern');
-      toast.dismiss();
+      toast.dismiss(toastId);
       toast.success('Report exported as PDF successfully!');
     } catch (error) {
       console.error('PDF export error:', error);

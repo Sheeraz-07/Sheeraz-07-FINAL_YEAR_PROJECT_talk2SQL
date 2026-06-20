@@ -343,9 +343,9 @@ export async function exportReportPDF(report: Report) {
     const opt = {
       margin: 10,
       filename,
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2 },
-      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' },
+      jsPDF: { orientation: 'portrait' as const, unit: 'mm' as const, format: 'a4' as const },
     };
 
     html2pdf().set(opt).from(html).save();

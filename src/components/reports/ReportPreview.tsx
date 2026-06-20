@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Download, Printer, X, FileDown } from 'lucide-react';
+import { Download, Printer, X, FileDown, DownloadCloud } from 'lucide-react';
 import { Report, ReportSection, ChartType } from '@/types';
 import { ReportVisualization } from './ReportVisualization';
 import { exportReportToPDF } from '@/lib/report-pdf-export';
@@ -229,18 +229,57 @@ export function ReportPreview({ report, onClose, onExport }: ReportPreviewProps)
   const handleExportWithLayout = async (layout: 'modern' | 'minimal') => {
     if (!exportDialog.format) return;
 
+    const toastId = toast.loading('📄 Generating PDF...');
     try {
-      toast.loading('📄 Generating PDF...');
       await exportReportToPDF(report, layout);
-      toast.dismiss();
+      toast.dismiss(toastId);
       toast.success('✅ PDF exported successfully');
     } catch (error) {
-      toast.dismiss();
+      toast.dismiss(toastId);
       const message = error instanceof Error ? error.message : 'Export failed';
       toast.error(`❌ Export failed: ${message}`);
       console.error('Export error:', error);
     }
   };
+
+  const handleDownloadFullData = async () => {
+    if (!report.rawData || report.rawData.length === 0) {
+      toast.error('Data is no longer available. Please generate a new report to download.');
+      return;
+    }
+
+    const toastId = toast.loading('Preparing CSV download...');
+    try {
+      const rawData = report.rawData;
+
+      // Convert to CSV
+      const columns = Object.keys(rawData[0]);
+      const header = columns.join(',');
+      const rows = rawData.map((row: any) =>
+        columns.map((c) => `"${String(row[c] ?? '').replace(/"/g, '""')}"`).join(',')
+      );
+
+      const csvContent = [header, ...rows].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${report.title.replace(/\s+/g, '_')}_raw_data.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.dismiss(toastId);
+      toast.success('CSV downloaded successfully');
+    } catch (err: any) {
+      console.error('Error downloading CSV:', err);
+      toast.dismiss(toastId);
+      toast.error(`Failed to generate CSV download: ${err.message || 'Unknown error'}`);
+    }
+  };
+
+  const hasData = report.rawData && report.rawData.length > 0;
 
   return (
     <>
@@ -267,7 +306,22 @@ export function ReportPreview({ report, onClose, onExport }: ReportPreviewProps)
         </div>
 
         {/* Actions */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+          {hasData ? (
+            <Button 
+              onClick={handleDownloadFullData}
+              variant="default"
+              size="sm"
+              className="w-full lg:w-auto rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold h-9 px-3"
+            >
+              <DownloadCloud className="w-4 h-4 mr-2" />
+              Download Full CSV
+            </Button>
+          ) : (
+            <span className="text-sm text-amber-600 dark:text-amber-400 font-medium px-2 py-1 bg-amber-50 dark:bg-amber-900/20 rounded">
+              Data available in active session only
+            </span>
+          )}
           <Button
             size="sm"
             variant="outline"

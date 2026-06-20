@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getAllUsers } from '@/app/admin/actions';
 import { Badge } from '@/components/ui/badge';
 
+export const dynamic = 'force-dynamic';
+
 export default async function SuperAdminUsersPage() {
   const users = await getAllUsers();
   return (

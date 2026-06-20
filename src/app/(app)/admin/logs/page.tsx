@@ -24,6 +24,8 @@ function formatAction(action: string) {
     .join(' ');
 }
 
+export const dynamic = 'force-dynamic';
+
 export default async function LogsPage() {
   const [logs, users] = await Promise.all([
     getActivityLogs(),

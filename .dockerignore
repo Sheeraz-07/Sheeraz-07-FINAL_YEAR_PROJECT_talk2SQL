@@ -1,0 +1,9 @@
+node_modules
+npm-debug.log
+.next
+.git
+README.md
+backend/
+supabase_query_history_setup.sql
+supabase_reports_setup.sql
+start-backend.bat

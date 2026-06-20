@@ -3,6 +3,8 @@ import { Badge } from '@/components/ui/badge';
 import { Shield, ShieldAlert, ShieldCheck, User } from 'lucide-react';
 import { getAllUsers } from '@/app/admin/actions';
 
+export const dynamic = 'force-dynamic';
+
 export default async function RolesPage() {
   const users = await getAllUsers();
   
