@@ -48,6 +48,11 @@ _BLOCKED_PATTERNS: list[tuple[re.Pattern, str]] = [
     (re.compile(r"--", re.IGNORECASE), "SQL comments (--) are not allowed"),
     (re.compile(r"/\*", re.IGNORECASE), "Block comments (/*) are not allowed"),
     (re.compile(r"\binformation_schema\b", re.IGNORECASE), "Access to information_schema is not allowed"),
+    
+    # Famous SQL Injection protections (e.g. 1=1)
+    (re.compile(r"\bOR\s+\d+\s*=\s*\d+", re.IGNORECASE), "Always-true boolean expressions (e.g., OR 1=1) are not allowed"),
+    (re.compile(r"\bOR\s+['\"].+?['\"]\s*=\s*['\"].+?['\"]", re.IGNORECASE), "Always-true string expressions are not allowed"),
+    (re.compile(r"\bOR\s+TRUE\b", re.IGNORECASE), "Boolean TRUE expressions are not allowed"),
 ]
 
 # _BLOCKED_PATTERNS.extend([
