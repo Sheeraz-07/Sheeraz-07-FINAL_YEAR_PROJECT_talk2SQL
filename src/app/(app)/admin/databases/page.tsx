@@ -1,10 +1,28 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Database, CheckCircle, Server } from 'lucide-react';
+import os from 'os';
+
+function getLocalIp() {
+  try {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+      for (const iface of interfaces[name] || []) {
+        if (iface.family === 'IPv4' && !iface.internal) {
+          return iface.address;
+        }
+      }
+    }
+  } catch (e) {
+    // Ignore error
+  }
+  return 'host.docker.internal';
+}
 
 export default function DatabasesPage() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'Unknown URL';
   const dbHost = supabaseUrl.replace('https://', '').split('/')[0] || 'Unknown Host';
+  const localIp = getLocalIp();
 
   const databases = [
     {
@@ -19,7 +37,7 @@ export default function DatabasesPage() {
       id: '2',
       name: 'FurnitureFactoryDB',
       type: 'sqlserver',
-      host: process.env.NEXT_PUBLIC_SQLSERVER_HOST || '192.168.1.5',
+      host: process.env.NEXT_PUBLIC_SQLSERVER_HOST || localIp,
       status: 'connected',
       description: 'Legacy SQL Server database containing raw business data (inventory, production, employees) queried by the AI.'
     }
