@@ -275,6 +275,33 @@ export async function signInAction(rawEmail: string, password: string) {
   }
 }
 
+export async function checkUserForPasswordReset(rawEmail: string) {
+  try {
+    const email = rawEmail.toLowerCase().trim();
+    const adminSupabase = createServerAdminClient();
+    const { data: existingUser, error } = await adminSupabase
+      .from('users')
+      .select('status')
+      .ilike('email', email)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!existingUser) {
+      return { success: false, error: 'Account does not exist. Please verify the email address.' };
+    }
+
+    if (existingUser.status !== 'approved') {
+      return { success: false, error: 'Your account is not approved or inactive. Please contact an administrator.' };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error checking user for password reset:', error);
+    return { success: false, error: 'An error occurred while verifying your account.' };
+  }
+}
+
 export async function signOutAction() {
   try {
     const supabase = await createServerSupabaseClient();

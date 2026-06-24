@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,6 +25,42 @@ type LoginForm = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const exchangeCode = async () => {
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get('code');
+      const hash = window.location.hash;
+      const errorMsg = url.searchParams.get('error_description') || new URLSearchParams(hash.replace('#', '?')).get('error_description');
+      
+      if (errorMsg) {
+        toast.error(errorMsg);
+      }
+      
+      if (code) {
+        // Exchange code for session (PKCE)
+        const { createClient } = await import('@/lib/supabase/client');
+        const supabase = createClient();
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        
+        if (!error) {
+          window.location.href = '/reset-password';
+        } else {
+          const { data } = await supabase.auth.getSession();
+          if (!data.session) {
+            toast.error('Invalid or expired link');
+          } else {
+            window.location.href = '/reset-password';
+          }
+        }
+      } else if (hash.includes('access_token')) {
+        // Implicit flow: token is in the hash fragment. 
+        // Redirect to reset-password with the hash so it can establish the session
+        window.location.href = '/reset-password' + hash;
+      }
+    };
+    exchangeCode();
+  }, []);
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),

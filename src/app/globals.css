@@ -160,4 +160,50 @@
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
+  /* Stunning Auth Backgrounds & Glass Panels */
+  .bg-auth-mesh {
+    background-color: hsl(var(--background));
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(250, 83%, 53%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(221, 83%, 53%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(250, 83%, 53%, 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(221, 83%, 53%, 0.1) 0px, transparent 50%);
+  }
+  .dark .bg-auth-mesh {
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(250, 83%, 60%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(217, 91%, 60%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(250, 83%, 60%, 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(217, 91%, 60%, 0.1) 0px, transparent 50%);
+  }
+
+  .auth-glass-panel {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+  }
+  .dark .auth-glass-panel {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  .hover-link-contrast:hover {
+    filter: brightness(1.2);
+  }
+  .dark .hover-link-contrast:hover {
+    filter: brightness(1.3);
+  }
+
+  .hover-icon-contrast:hover {
+    color: hsl(var(--foreground));
+    background-color: hsla(var(--foreground), 0.05);
+  }
+
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+  }
 }

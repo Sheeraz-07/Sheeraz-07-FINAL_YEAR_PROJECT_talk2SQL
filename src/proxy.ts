@@ -30,7 +30,7 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
-  const publicRoutes = ['/', '/login', '/register', '/forgot-password', '/waiting-approval'];
+  const publicRoutes = ['/', '/login', '/register', '/forgot-password', '/waiting-approval', '/reset-password'];
 
   let userProfile: { role: string | null; status?: string | null } | null = null;
   if (user) {

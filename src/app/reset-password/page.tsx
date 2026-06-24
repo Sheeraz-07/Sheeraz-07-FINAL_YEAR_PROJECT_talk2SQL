@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -30,6 +30,36 @@ export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const exchangeAttempted = useRef(false);
+
+  useEffect(() => {
+    if (exchangeAttempted.current) return;
+    exchangeAttempted.current = true;
+
+    const exchangeCode = async () => {
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get('code');
+      
+      if (code) {
+        const supabase = createClient();
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          // In React Strict Mode, this might run twice. The first succeeds, the second fails.
+          // Only show the error if we don't actually have a session.
+          const { data } = await supabase.auth.getSession();
+          if (!data.session) {
+            toast.error('Invalid or expired reset link');
+          }
+        } else {
+          // Clean up the URL
+          url.searchParams.delete('code');
+          window.history.replaceState({}, '', url.toString());
+        }
+      }
+    };
+    
+    exchangeCode();
+  }, []);
 
   const { register, handleSubmit, formState: { errors } } = useForm<ResetPasswordForm>({
     resolver: zodResolver(resetPasswordSchema),
@@ -43,6 +73,9 @@ export default function ResetPasswordPage() {
 
       if (error) throw error;
       
+      // Log the user out so they are forced to log in with their new password
+      await supabase.auth.signOut();
+      
       setIsSuccess(true);
       toast.success('Password reset successfully');
     } catch (error) {
@@ -54,27 +87,21 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
-      </div>
-
-      <Card className="w-full max-w-md relative animate-fade-in">
-        <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-primary/30">
+    <div className="min-h-screen flex items-center justify-center bg-auth-mesh relative overflow-hidden p-4">
+      <Card className="w-full max-w-md auth-glass-panel transition-all duration-500 animate-fade-in hover:shadow-2xl relative z-10 border-border/50">
+        <CardHeader className="text-center space-y-5 pb-6 pt-8">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-accent flex items-center justify-center shadow-lg shadow-accent/20">
             {isSuccess ? (
-              <CheckCircle className="h-8 w-8 text-primary-foreground" />
+              <CheckCircle className="h-7 w-7 text-accent-foreground" />
             ) : (
-              <MessageSquare className="h-8 w-8 text-primary-foreground" />
+              <MessageSquare className="h-7 w-7 text-accent-foreground" />
             )}
           </div>
-          <div>
-            <CardTitle className="text-2xl font-bold">
+          <div className="space-y-1">
+            <CardTitle className="text-2xl font-bold tracking-tight">
               {isSuccess ? 'Password reset!' : 'Set new password'}
             </CardTitle>
-            <CardDescription className="mt-2">
+            <CardDescription className="text-sm font-medium">
               {isSuccess
                 ? 'Your password has been successfully reset'
                 : 'Your new password must be different from previous passwords'}
@@ -82,64 +109,68 @@ export default function ResetPasswordPage() {
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="pb-8">
           {isSuccess ? (
             <Link href="/login">
-              <Button className="w-full">
+              <Button className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold shadow-md transition-all">
                 Continue to login
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="password">New Password</Label>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              <div className="space-y-2 text-left">
+                <Label htmlFor="password" className="text-sm font-semibold">New Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    className="pl-10 pr-10"
+                    className="pl-10 pr-10 h-11 rounded-xl border-border/50 focus:border-accent"
                     {...register('password')}
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 rounded-lg text-muted-foreground hover-icon-contrast"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      <Eye className="h-4 w-4" />
                     )}
                   </Button>
                 </div>
                 {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password.message}</p>
+                  <p className="text-xs text-destructive mt-1">{errors.password.message}</p>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <div className="space-y-2 text-left">
+                <Label htmlFor="confirmPassword" className="text-sm font-semibold">Confirm Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="confirmPassword"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    className="pl-10"
+                    className="pl-10 h-11 rounded-xl border-border/50 focus:border-accent"
                     {...register('confirmPassword')}
                   />
                 </div>
                 {errors.confirmPassword && (
-                  <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+                  <p className="text-xs text-destructive mt-1">{errors.confirmPassword.message}</p>
                 )}
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button 
+                type="submit" 
+                className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-200 mt-2" 
+                disabled={isLoading}
+              >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
                     <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -157,10 +188,10 @@ export default function ResetPasswordPage() {
         </CardContent>
 
         {!isSuccess && (
-          <CardFooter className="justify-center">
+          <CardFooter className="justify-center border-t border-border/30 pt-6 pb-6">
             <Link
               href="/login"
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground font-medium hover-link-contrast transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to login
