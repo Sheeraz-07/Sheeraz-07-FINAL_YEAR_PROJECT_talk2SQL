@@ -191,6 +191,8 @@ function toChartData(rows: Record<string, unknown>[], spec: VisualizationChartSp
   }));
 }
 
+import { autoFormatValue, formatNumberCompact } from '@/lib/formatters';
+
 function ChartCard({ spec, rows }: { spec: VisualizationChartSpec; rows: Record<string, unknown>[] }) {
   const chartData = useMemo(() => toChartData(rows, spec), [rows, spec]);
 
@@ -213,7 +215,7 @@ function ChartCard({ spec, rows }: { spec: VisualizationChartSpec; rows: Record<
               <tr key={index} className="border-t border-slate-200 dark:border-slate-700">
                 {Object.keys(preview[0] || {}).map((key) => (
                   <td key={key} className="px-3 py-2">
-                    {String(row[key] ?? '-')}
+                    {autoFormatValue(key, row[key] ?? '-')}
                   </td>
                 ))}
               </tr>
@@ -231,8 +233,8 @@ function ChartCard({ spec, rows }: { spec: VisualizationChartSpec; rows: Record<
         <BarChart data={bins}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="range" />
-          <YAxis />
-          <Tooltip />
+          <YAxis tickFormatter={(v) => formatNumberCompact(v)} />
+          <Tooltip formatter={(v: number, n: string) => autoFormatValue(n, v)} />
           <Bar dataKey="count" fill="#2563eb" />
         </BarChart>
       </ResponsiveContainer>
@@ -250,8 +252,8 @@ function ChartCard({ spec, rows }: { spec: VisualizationChartSpec; rows: Record<
         <ComposedChart data={[box]}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="label" />
-          <YAxis />
-          <Tooltip />
+          <YAxis tickFormatter={(v) => formatNumberCompact(v)} />
+          <Tooltip formatter={(v: number, n: string) => autoFormatValue(n, v)} />
           <Bar dataKey="floor" stackId="box" fill="transparent" />
           <Bar dataKey="box" stackId="box" fill="#3b82f6" radius={[4, 4, 0, 0]} />
           <ReferenceLine y={box.median} stroke="#ef4444" strokeWidth={2} />
@@ -269,8 +271,8 @@ function ChartCard({ spec, rows }: { spec: VisualizationChartSpec; rows: Record<
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey={spec.x} />
-          <YAxis />
-          <Tooltip />
+          <YAxis tickFormatter={(v) => autoFormatValue(spec.y!, v)} />
+          <Tooltip formatter={(v: number, n: string) => autoFormatValue(n, v)} />
           <Legend />
           {seriesKeys.map((key, index) => (
             <Bar
@@ -294,7 +296,7 @@ function ChartCard({ spec, rows }: { spec: VisualizationChartSpec; rows: Record<
     return (
       <ResponsiveContainer width="100%" height={280}>
         <PieChart>
-          <Tooltip />
+          <Tooltip formatter={(v: number) => autoFormatValue(spec.values!, v)} />
           <Legend />
           <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={95} label>
             {pieData.map((_, index) => (
@@ -318,9 +320,9 @@ function ChartCard({ spec, rows }: { spec: VisualizationChartSpec; rows: Record<
       <ResponsiveContainer width="100%" height={280}>
         <ScatterChart>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="x" name={spec.x} />
-          <YAxis dataKey="y" name={spec.y} />
-          <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+          <XAxis dataKey="x" name={spec.x} tickFormatter={(v) => autoFormatValue(spec.x!, v)} />
+          <YAxis dataKey="y" name={spec.y} tickFormatter={(v) => autoFormatValue(spec.y!, v)} />
+          <Tooltip cursor={{ strokeDasharray: '3 3' }} formatter={(v: number, n: string) => autoFormatValue(n, v)} />
           <Scatter data={scatterData} fill="#2563eb" />
         </ScatterChart>
       </ResponsiveContainer>
@@ -333,8 +335,8 @@ function ChartCard({ spec, rows }: { spec: VisualizationChartSpec; rows: Record<
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey={spec.x} />
-          <YAxis />
-          <Tooltip />
+          <YAxis tickFormatter={(v) => autoFormatValue(spec.y!, v)} />
+          <Tooltip formatter={(v: number, n: string) => autoFormatValue(n, v)} />
           <Line type="monotone" dataKey={spec.y} stroke="#2563eb" strokeWidth={2} dot={false} />
         </LineChart>
       </ResponsiveContainer>
@@ -347,8 +349,8 @@ function ChartCard({ spec, rows }: { spec: VisualizationChartSpec; rows: Record<
         <AreaChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey={spec.x} />
-          <YAxis />
-          <Tooltip />
+          <YAxis tickFormatter={(v) => autoFormatValue(spec.y!, v)} />
+          <Tooltip formatter={(v: number, n: string) => autoFormatValue(n, v)} />
           <Area type="monotone" dataKey={spec.y} stroke="#2563eb" fill="#93c5fd" />
         </AreaChart>
       </ResponsiveContainer>
@@ -361,8 +363,8 @@ function ChartCard({ spec, rows }: { spec: VisualizationChartSpec; rows: Record<
         <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey={spec.x} />
-          <YAxis />
-          <Tooltip />
+          <YAxis tickFormatter={(v) => autoFormatValue(spec.y!, v)} />
+          <Tooltip formatter={(v: number, n: string) => autoFormatValue(n, v)} />
           <Bar dataKey={spec.y} fill="#2563eb" />
         </BarChart>
       </ResponsiveContainer>

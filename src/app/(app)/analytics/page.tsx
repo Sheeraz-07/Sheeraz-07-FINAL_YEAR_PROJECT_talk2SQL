@@ -33,6 +33,7 @@ import { cn } from '@/lib/utils';
 import { useQueryStore } from '@/stores/queryStore';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'sonner';
+import { formatNumberCompact } from '@/lib/formatters';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 const PIE_COLORS = ['#2563eb', '#10b981', '#f59e0b', '#a855f7', '#ef4444', '#0ea5e9'];
@@ -45,11 +46,7 @@ function compactDateLabel(value: string) {
 }
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'PKR',
-    maximumFractionDigits: 0,
-  }).format(value);
+  return formatNumberCompact(value, true, 'PKR ');
 }
 
 function formatPercent(value: number) {
@@ -111,7 +108,7 @@ export default function AnalyticsPage() {
       },
       {
         title: 'Total Orders',
-        value: analytics.kpis.total_orders.value.toLocaleString(),
+        value: formatNumberCompact(analytics.kpis.total_orders.value),
         change: analytics.kpis.total_orders.change_pct,
       },
       {
@@ -131,7 +128,7 @@ export default function AnalyticsPage() {
       },
       {
         title: 'Low Stock Items',
-        value: analytics.kpis.low_stock_items.value.toLocaleString(),
+        value: formatNumberCompact(analytics.kpis.low_stock_items.value),
         change: analytics.kpis.low_stock_items.change_pct,
       },
     ],
@@ -222,7 +219,7 @@ export default function AnalyticsPage() {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                     <XAxis dataKey="day" tickFormatter={compactDateLabel} className="text-xs" />
-                    <YAxis className="text-xs" tickFormatter={(v) => `${Math.round(v / 1000)}K`} />
+                    <YAxis className="text-xs" tickFormatter={(v) => formatNumberCompact(v)} />
                     <Tooltip
                       labelFormatter={(v) => compactDateLabel(String(v))}
                       formatter={(v: number) => formatCurrency(v)}
@@ -273,8 +270,8 @@ export default function AnalyticsPage() {
                   <BarChart data={analytics.charts.sales_trend}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                     <XAxis dataKey="day" tickFormatter={compactDateLabel} className="text-xs" />
-                    <YAxis className="text-xs" />
-                    <Tooltip labelFormatter={(v) => compactDateLabel(String(v))} />
+                    <YAxis className="text-xs" tickFormatter={(v) => formatNumberCompact(v)} />
+                    <Tooltip labelFormatter={(v) => compactDateLabel(String(v))} formatter={(v: number) => formatNumberCompact(v)} />
                     <Bar dataKey="orders" fill="#0ea5e9" radius={[5, 5, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -287,7 +284,7 @@ export default function AnalyticsPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={analytics.charts.top_products} layout="vertical" margin={{ left: 20, right: 10 }}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis type="number" className="text-xs" />
+                    <XAxis type="number" className="text-xs" tickFormatter={(v) => formatNumberCompact(v)} />
                     <YAxis type="category" dataKey="product_name" width={150} className="text-xs" />
                     <Tooltip formatter={(v: number) => formatCurrency(v)} />
                     <Bar dataKey="revenue" fill="#10b981" radius={[0, 5, 5, 0]} />
@@ -352,9 +349,9 @@ export default function AnalyticsPage() {
                     {analytics.alerts.low_stock_items.map((item) => (
                       <tr key={item.material_name} className="border-t border-border">
                         <td className="px-4 py-2">{item.material_name}</td>
-                        <td className="px-4 py-2">{item.current_stock}</td>
-                        <td className="px-4 py-2">{item.reorder_level}</td>
-                        <td className="px-4 py-2 font-semibold text-red-600">{item.deficit}</td>
+                        <td className="px-4 py-2">{formatNumberCompact(item.current_stock)}</td>
+                        <td className="px-4 py-2">{formatNumberCompact(item.reorder_level)}</td>
+                        <td className="px-4 py-2 font-semibold text-red-600">{formatNumberCompact(item.deficit)}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -29,6 +29,7 @@ import Link from "next/link";
 import { useQueryStore } from "@/stores/queryStore";
 import { useAuthStore } from "@/stores/authStore";
 import type { Insight } from "@/types";
+import { formatNumberCompact } from "@/lib/formatters";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -130,7 +131,7 @@ export default function DashboardPage() {
         title: "Revenue Momentum",
         description: `Revenue is up ${revenueChange.toFixed(1)}% vs previous period. Consider scaling best-performing SKUs and channels.`,
         trend: "up",
-        value: `PKR ${analytics.kpis.total_revenue.value.toLocaleString()}`,
+        value: formatNumberCompact(analytics.kpis.total_revenue.value, true, "PKR "),
       });
     } else {
       insights.push({
@@ -138,7 +139,7 @@ export default function DashboardPage() {
         title: "Revenue Decline Warning",
         description: `Revenue is down ${Math.abs(revenueChange).toFixed(1)}% vs previous period. Review pricing, campaign mix, and demand drop by category.`,
         trend: "down",
-        value: `PKR ${analytics.kpis.total_revenue.value.toLocaleString()}`,
+        value: formatNumberCompact(analytics.kpis.total_revenue.value, true, "PKR "),
       });
     }
 
@@ -148,7 +149,7 @@ export default function DashboardPage() {
         title: "Order Volume Trend",
         description: `Order volume increased by ${ordersChange.toFixed(1)}%. Verify fulfillment capacity keeps pace to avoid service bottlenecks.`,
         trend: "up",
-        value: analytics.kpis.total_orders.value.toLocaleString(),
+        value: formatNumberCompact(analytics.kpis.total_orders.value),
       });
     } else {
       insights.push({
@@ -156,7 +157,7 @@ export default function DashboardPage() {
         title: "Order Volume Softening",
         description: `Order volume decreased by ${Math.abs(ordersChange).toFixed(1)}%. Investigate demand drivers and product/category performance.`,
         trend: "down",
-        value: analytics.kpis.total_orders.value.toLocaleString(),
+        value: formatNumberCompact(analytics.kpis.total_orders.value),
       });
     }
 
@@ -197,7 +198,7 @@ export default function DashboardPage() {
         title: "Top Product Driver",
         description: `${topProduct.product_name} is currently the top revenue contributor. Use it as a benchmark for assortment and promotions.`,
         trend: "neutral",
-        value: `PKR ${Math.round(topProduct.revenue).toLocaleString()}`,
+        value: formatNumberCompact(topProduct.revenue, true, "PKR "),
       });
     }
 
@@ -232,7 +233,7 @@ export default function DashboardPage() {
             title="Total Revenue"
             value={
               analytics
-                ? `PKR ${(analytics.kpis.total_revenue.value / 1000).toFixed(0)}K`
+                ? formatNumberCompact(analytics.kpis.total_revenue.value, true, "PKR ")
                 : "—"
             }
             change={
@@ -331,12 +332,12 @@ export default function DashboardPage() {
                     />
                     <YAxis
                       className="text-[0.65rem]"
-                      tickFormatter={(value) => `${value / 1000}K`}
+                      tickFormatter={(value) => formatNumberCompact(value)}
                       stroke="hsl(var(--muted-foreground))"
                     />
                     <Tooltip
                       formatter={(value: number) =>
-                        `PKR ${value.toLocaleString()}`
+                        formatNumberCompact(value, true, "PKR ")
                       }
                       contentStyle={{
                         backgroundColor: "hsl(var(--card))",

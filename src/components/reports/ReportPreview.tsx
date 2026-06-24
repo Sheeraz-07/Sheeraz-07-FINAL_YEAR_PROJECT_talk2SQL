@@ -36,6 +36,8 @@ interface ExportDialogState {
   format: 'pdf' | null;
 }
 
+import { autoFormatValue } from '@/lib/formatters';
+
 function renderMetrics(metrics: ReportSection['metrics']) {
   if (!metrics) return null;
   return (
@@ -44,7 +46,7 @@ function renderMetrics(metrics: ReportSection['metrics']) {
         <Card key={idx} className="p-3 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/20">
           <p className="text-xs text-muted-foreground font-medium mb-1">{metric.label}</p>
           <div className="flex items-end justify-between gap-2">
-            <p className="text-xl font-bold text-foreground">{metric.value}</p>
+            <p className="text-xl font-bold text-foreground">{autoFormatValue(metric.label, metric.value)}</p>
             {metric.trend && (
               <Badge
                 variant="outline"
@@ -71,9 +73,12 @@ function renderTableData(columns: string[] | undefined, data: Record<string, unk
   if (!columns || !data || data.length === 0) return null;
   const displayColumns = columns;
 
-  const formatValue = (val: unknown) => {
+  const formatValue = (key: string, val: unknown) => {
     if (val === null || val === undefined) return '-';
-    const str = String(val);
+    
+    const formatted = autoFormatValue(key, val);
+    
+    const str = String(formatted);
     // If it looks like a full timestamp (ISO or SQL), extract just the date part YYYY-MM-DD
     if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}/.test(str)) {
       return str.substring(0, 10);
@@ -101,7 +106,7 @@ function renderTableData(columns: string[] | undefined, data: Record<string, unk
             >
               {displayColumns.map((col) => (
                 <td key={col} className="px-3 py-2 text-foreground whitespace-normal break-words align-top">
-                  {formatValue(row[col])}
+                  {formatValue(col, row[col])}
                 </td>
               ))}
             </tr>

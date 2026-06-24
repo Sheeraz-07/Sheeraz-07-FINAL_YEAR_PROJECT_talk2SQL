@@ -1,6 +1,7 @@
 import { LucideIcon, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { autoFormatValue } from '@/lib/formatters';
 
 interface MetricCardProps {
   title: string;
@@ -12,6 +13,8 @@ interface MetricCardProps {
 }
 
 export function MetricCard({ title, value, change, icon: Icon, trend, className }: MetricCardProps) {
+  const formattedValue = autoFormatValue(title, value);
+
   return (
     <Card className={cn(
       'group relative overflow-hidden transition-all duration-200 h-[140px] w-full p-5 cursor-pointer',
@@ -37,7 +40,7 @@ export function MetricCard({ title, value, change, icon: Icon, trend, className 
       </div>
       <div className="space-y-1">
         <p className="text-[13px] font-[500] text-muted-foreground tracking-tight">{title}</p>
-        <p className="text-[28px] font-[600] text-foreground leading-none tracking-tight">{value}</p>
+        <p className="text-[28px] font-[600] text-foreground leading-none tracking-tight">{formattedValue}</p>
       </div>
     </Card>
   );

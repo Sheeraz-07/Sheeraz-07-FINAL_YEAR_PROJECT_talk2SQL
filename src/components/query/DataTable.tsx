@@ -35,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { autoFormatValue } from '@/lib/formatters';
 
 interface DataTableProps {
   data: Record<string, unknown>[];
@@ -43,9 +44,13 @@ interface DataTableProps {
 }
 
 export function DataTable({ data, columns, className }: DataTableProps) {
-  const formatValue = (val: unknown) => {
+  const formatValue = (key: string, val: unknown) => {
     if (val === null || val === undefined) return '-';
-    const str = String(val);
+    
+    // Auto-format large numbers, ignoring IDs and percentages
+    const formatted = autoFormatValue(key, val);
+    
+    const str = String(formatted);
     // If it looks like a full timestamp (ISO or SQL), extract just the date part YYYY-MM-DD
     if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}/.test(str)) {
       return str.substring(0, 10);
@@ -239,7 +244,7 @@ export function DataTable({ data, columns, className }: DataTableProps) {
                         "font-medium text-slate-900 dark:text-slate-100",
                         isNumber && "tabular-nums"
                       )}>
-                        {formatValue(value)}
+                        {formatValue(column, value)}
                       </TableCell>
                     );
                   })}
