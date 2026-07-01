@@ -131,7 +131,10 @@ export default function ReportsPage() {
     }
 
     toast.loading('Saving report metadata to database...');
-    const saveRes = await saveReportAction(newReport);
+    // We use toStoredReport here so we don't send 16,000 rows to the Next.js Server Action payload!
+    // The Next.js server action deletes it anyway, but sending it causes the 1MB error and the 10s connection timeout.
+    const lightweightReport = toStoredReport(newReport);
+    const saveRes = await saveReportAction(lightweightReport);
     toast.dismiss();
 
     if (!saveRes.success) {
@@ -173,9 +176,9 @@ export default function ReportsPage() {
   };
 
   const handleExportReport = async (report: Report, format: 'csv' = 'csv') => {
-    toast.loading('Preparing data for export...');
+    const prepToastId = toast.loading('Preparing data for export...');
     const fullReport = await getFullReportAsync(report);
-    toast.dismiss();
+    toast.dismiss(prepToastId);
 
     if (!fullReport.rawData || !fullReport.rawData.length) {
       toast.error('Data not found. Raw data is only available during the active session when it is first generated.');
@@ -225,23 +228,24 @@ export default function ReportsPage() {
   };
 
   const handleExportReportPDF = async (report: Report) => {
+    let activeToastId;
     try {
-      toast.loading('Preparing data for PDF...');
+      activeToastId = toast.loading('Preparing data for PDF...');
       const fullReport = await getFullReportAsync(report);
-      toast.dismiss();
+      toast.dismiss(activeToastId);
 
       if (!fullReport.rawData || !fullReport.rawData.length) {
         toast.error('Data not found. PDF export requires raw data, which is only available during the active session.');
         return;
       }
 
-      const toastId = toast.loading('Generating PDF... This may take a moment.');
+      activeToastId = toast.loading('Generating PDF... This may take a moment.');
       await exportReportToPDF(fullReport, fullReport.metadata?.suggestedLayout || 'modern');
-      toast.dismiss(toastId);
+      toast.dismiss(activeToastId);
       toast.success('Report exported as PDF successfully!');
     } catch (error) {
       console.error('PDF export error:', error);
-      toast.dismiss();
+      if (activeToastId) toast.dismiss(activeToastId);
       toast.error('PDF export failed. Please try another format.');
     }
   };
